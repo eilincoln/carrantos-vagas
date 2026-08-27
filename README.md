@@ -1,42 +1,65 @@
-# 🏢 Carrantos Carreiras — Portal Institucional de Oportunidades
+# 🏢 CARRANTOS CARREIRAS — PORTAL INSTITUCIONAL DE VAGAS
 
 > [!NOTE]
-> **Projeto de Portfólio & Solução Corporativa:** Desenvolvido para resolver o desafio de centralização, busca regional e captação de talentos para o Grupo Carrantos, validando a arquitetura em React + TypeScript para um MVP de alta performance.
+> **Projeto de Portfólio & Solução Corporativa:** Este repositório foi desenvolvido para solucionar a centralização, filtragem regional e captação de talentos do Grupo Carrantos. O projeto valida a arquitetura front-end em **React + TypeScript + Vite**, aplicando componentização modular, design tokens nativos e padrões estritos de acessibilidade e performance em produção contínua.
 
-Plataforma front-end moderna e responsiva construída para conectar profissionais às oportunidades de trabalho do Grupo Carrantos nas áreas de Facilities, Segurança Patrimonial, Portaria e Administrativo. O sistema conta com busca textual em tempo real, filtros por unidade geográfica regional, modal acessível de detalhamento da vaga e encaminhamento ágil de candidatos via formulário e API do WhatsApp.
+Plataforma institucional de carreiras e catálogo de oportunidades operacionais desenvolvida para o **Grupo Carrantos**. A aplicação entrega uma experiência de busca e filtragem reativa em tempo real, interface corporativa moderna e total fidelidade responsiva para candidatos em dispositivos móveis e computadores.
 
 ---
 
 ## 📱 Demonstração do Projeto
 
-_(Adicione aqui os prints ou GIFs do projeto rodando em desktop e mobile)_
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="60%">
+        <b>💻 Versão Desktop</b><br><br>
+        <img src="./src/assets/preview-desktop.png" alt="Demonstração da versão Desktop" width="100%">
+      </td>
+      <td align="center" width="40%">
+        <b>📱 Versão Mobile</b><br><br>
+        <img src="./src/assets/preview-mobile.png" alt="Demonstração da versão Mobile" width="100%">
+      </td>
+    </tr>
+  </table>
+</div>
 
 ---
 
 ## 🚀 Stack Tecnológica e Conceitos Aplicados
 
-- **React:** Construção de interface declarativa baseada em componentes reutilizáveis e desacoplados (`Header`, `Hero`, `JobFilters`, `JobCard`, `JobModal`).
-- **TypeScript:** Tipagem estática rigorosa através de _Interfaces_ e _Union Types_, prevenindo inconsistências em tempo de compilação e garantindo a integridade dos dados das vagas.
-- **Vite:** Ferramenta de build e bundling ultrarrápida com Hot Module Replacement (HMR).
-- **CSS Modules & Design Tokens:** Estilização modular com variáveis nativas em `:root`, assegurando consistência da identidade visual corporativa sem poluição do escopo global.
-- **Acessibilidade (a11y) & Semântica HTML5:** Utilização de tags semânticas (`<header>`, `<main>`, `<article>`, `<section>`), atributos ARIA (`aria-modal`, `role="dialog"`) e suporte à navegação por teclado (`Escape key`).
-- **Intl.NumberFormat API:** Formatação monetária padronizada nativa para o padrão Real (BRL).
+O projeto foi construído utilizando as melhores práticas do ecossistema front-end moderno, focando em robustez de tipagem, manutenibilidade e performance:
+
+- **React Declarativo & Hooks:** Componentização desacoplada (`Header`, `Hero`, `JobFilters`, `JobCard`, `JobModal`, `TalentBank`, `CompanyCulture`) com gerenciamento de estado previsível via `useState` e sincronização de eventos de janela com `useEffect`.
+- **TypeScript Estrito:** Modelagem de contratos de dados através de _Interfaces_ e _Union Types_, eliminando erros de digitação e garantindo integridade das categorias e unidades regionais antes do build.
+- **Vite & Bundle Optimization:** Build tool ultrarrápida com Hot Module Replacement (HMR) e compilação otimizada para produção.
+- **CSS Modules & Design Tokens:** Encapsulamento de estilos por componente para prevenir poluição de escopo global, orientado por tokens corporativos centralizados no `:root`.
+- **HTML5 Semântico & Acessibilidade (A11y):** Uso de tags estruturais (`header`, `main`, `section`, `article`), atributos ARIA (`aria-modal`, `role="dialog"`, `aria-labelledby`) e navegação assistida por teclado via tecla `Escape`.
+- **Formatação Monetária com API Nativa:** Tratamento de valores salariais utilizando `Intl.NumberFormat` para o padrão monetário brasileiro (BRL).
 
 ---
 
 ## 📝 Funcionalidades em Destaque
 
-- **Filtros Dinâmicos Combinados:** Busca textual por cargo integrada a seletores de Cidade/Unidade (Itatiba, Atibaia, Campinas, Jundiaí) e Categoria de atuação via estado reativo com React `useState`.
-- **Layout Responsivo Automático:** Grid flexível com `minmax` e CSS Clamp, garantindo adaptação perfeita de telas móveis a monitores ultrawide.
-- **Modal de Detalhamento Interativo:** Visualização completa de atribuições, requisitos e benefícios com bloqueio de propagação de eventos (_event bubbling_).
-- **Candidatura Multicanal:** Integração direta com mensagens estruturadas para WhatsApp e formulário de captação de dados para o RH.
+- **Filtros Dinâmicos Combinados:** Busca textual instantânea integrada a seletores de Unidade/Cidade (Itatiba, Atibaia, Campinas, Jundiaí) e Área de Atuação (Facilities, Segurança, Portaria, Administrativo) com tratamento de estado vazio (_empty state_)[cite: 1].
+- **Layout Responsivo Automático:** Grid autoajustável com CSS `repeat(auto-fill, minmax(320px, 1fr))` para adaptação fluida em qualquer resolução sem sobrecarga de media queries.
+- **Modal de Detalhamento Acessível:** Exibição completa de atividades, escolaridade, escalas e benefícios com bloqueio de propagação de eventos (_event bubbling_).
+- **Candidatura Multicanal:** Integração direta com mensagens pré-formatadas para a API do WhatsApp e redirecionamento para o formulário oficial de captação.
+- **Seção Banco de Talentos & Cultura:** Captação de candidatos fora do perfil imediato e apresentação dos pilares institucionais e diferenciais da empresa[cite: 1].
+
+---
+
+## 🌐 Deploy em Produção
+
+O projeto encontra-se publicado e disponível para testes em:  
+🔗 **[carrantos-vagas.vercel.app](https://carrantos-vagas.vercel.app)**
 
 ---
 
 ## 👨‍💻 Autor
 
-Desenvolvido com dedicação por **Lincoln Berto**.
+Desenvolvido por **Lincoln Berto**.
 
-- **LinkedIn:** https://www.linkedin.com/in/lincoln-berto/
-- **GitHub:** https://github.com/eilincoln
-- **Portfólio:** https://lincolnberto.com.br
+- **LinkedIn:** [https://www.linkedin.com/in/lincoln-berto/](https://www.linkedin.com/in/lincoln-berto/)
+- **GitHub:** [https://github.com/eilincoln](https://github.com/eilincoln)
+- **Portfólio:** [https://lincolnberto.com.br](https://lincolnberto.com.br)
