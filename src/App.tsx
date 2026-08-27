@@ -2,15 +2,15 @@ import { useState } from "react";
 import { Header } from "./components/Header/Header";
 import { Hero } from "./components/Hero/Hero";
 import { JobFilters } from "./components/JobFilters/JobFilters";
+import { JobCard } from "./components/JobCard/JobCard";
 import { mockJobs } from "./data/jobsData";
+import type { Job } from "./types/job";
 
 function App() {
-  // Estados para gerenciar as escolhas do usuário
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
 
-  // Lógica de filtragem dinâmica derivada dos estados
   const filteredJobs = mockJobs.filter((job) => {
     const matchesSearch = job.title
       .toLowerCase()
@@ -25,15 +25,22 @@ function App() {
     return matchesSearch && matchesLocation && matchesCategory;
   });
 
+  const handleSelectJob = (job: Job) => {
+    console.log("Vaga selecionada para modal:", job);
+  };
+
   return (
     <div>
       <Header />
       <Hero />
 
       <main
-        style={{ maxWidth: "1200px", margin: "2rem auto", padding: "0 1.5rem" }}
+        style={{
+          maxWidth: "1200px",
+          margin: "2.5rem auto",
+          padding: "0 1.5rem",
+        }}
       >
-        {/* Barra de Filtros */}
         <JobFilters
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
@@ -43,61 +50,51 @@ function App() {
           onCategoryChange={setSelectedCategory}
         />
 
-        {/* Contador e Status */}
-        <div style={{ marginBottom: "1.5rem" }}>
+        <div
+          style={{
+            marginBottom: "1.5rem",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <p style={{ color: "var(--color-text-muted)", fontSize: "0.95rem" }}>
             Vagas encontradas: <strong>{filteredJobs.length}</strong>
           </p>
         </div>
 
-        {/* Lista de Vagas Filtradas */}
         {filteredJobs.length === 0 ? (
           <div
             style={{
               textAlign: "center",
-              padding: "3rem",
+              padding: "4rem 1.5rem",
               background: "var(--color-surface)",
-              borderRadius: "var(--radius-md)",
+              borderRadius: "var(--radius-lg)",
               border: "1px solid var(--color-border)",
             }}
           >
+            <h3
+              style={{ color: "var(--color-primary)", marginBottom: "0.5rem" }}
+            >
+              Nenhuma vaga encontrada
+            </h3>
             <p style={{ color: "var(--color-text-muted)" }}>
-              Nenhuma vaga encontrada para os filtros selecionados.
+              Tente alterar os termos da busca ou limpar os filtros de cidade e
+              área.
             </p>
           </div>
         ) : (
-          <ul
+          <div
             style={{
-              listStyle: "none",
-              display: "flex",
-              flexDirection: "column",
-              gap: "1rem",
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+              gap: "1.5rem",
             }}
           >
             {filteredJobs.map((job) => (
-              <li
-                key={job.id}
-                style={{
-                  background: "var(--color-surface)",
-                  padding: "1.5rem",
-                  borderRadius: "var(--radius-md)",
-                  border: "1px solid var(--color-border)",
-                }}
-              >
-                <h2
-                  style={{ fontSize: "1.25rem", color: "var(--color-primary)" }}
-                >
-                  {job.title}
-                </h2>
-                <p style={{ color: "var(--color-text-muted)" }}>
-                  {job.location} • {job.category}
-                </p>
-                <p style={{ marginTop: "0.5rem" }}>
-                  <strong>Salário:</strong> R$ {job.salary.toFixed(2)}
-                </p>
-              </li>
+              <JobCard key={job.id} job={job} onSelectJob={handleSelectJob} />
             ))}
-          </ul>
+          </div>
         )}
       </main>
     </div>
