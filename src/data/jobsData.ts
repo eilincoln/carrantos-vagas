@@ -16,7 +16,7 @@ export const mockJobs: Job[] = [
       "Vale-alimentação de R$ 205,91",
       "Prêmio de assiduidade: R$ 315,00",
     ],
-    whatsappContact: "5511988828544",
+    whatsappContact: "5511950253677",
   },
   {
     id: "vaga-vigia-02",
@@ -35,6 +35,6 @@ export const mockJobs: Job[] = [
       "Vale-alimentação de R$ 205,91",
       "Prêmio de assiduidade: R$ 110,00",
     ],
-    whatsappContact: "5511988828544",
+    whatsappContact: "5511950253677",
   },
 ];
