@@ -1,24 +1,28 @@
-export type JobLocation =
-  | "Itatiba - SP"
-  | "Atibaia - SP"
-  | "Campinas - SP"
-  | "Jundiaí - SP";
 export type JobCategory =
   | "Facilities"
   | "Segurança"
   | "Portaria"
-  | "Administrativo";
+  | "Administrativo"
+  | string;
+export type JobLocation =
+  | "Itatiba - SP"
+  | "Atibaia - SP"
+  | "Campinas - SP"
+  | "Jundiaí - SP"
+  | string;
 
 export interface Job {
   id: string;
   title: string;
-  location: JobLocation;
   category: JobCategory;
-  education: string;
-  requirements?: string[];
-  schedule?: string;
-  activities: string;
+  location: JobLocation;
   salary: number;
+  activities: string;
+  education: string;
+  schedule?: string;
   benefits: string[];
+  requirements?: string[];
   whatsappContact: string;
+  isActive?: boolean;
+  createdAt?: string;
 }

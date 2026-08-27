@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "../../lib/supabase";
 import { Header } from "../../components/Header/Header";
 import { Hero } from "../../components/Hero/Hero";
 import { JobFilters } from "../../components/JobFilters/JobFilters";
@@ -7,10 +8,11 @@ import { JobModal } from "../../components/JobModal/JobModal";
 import { ApplicationModal } from "../../components/ApplicationModal/ApplicationModal";
 import { TalentBank } from "../../components/TalentBank/TalentBank";
 import { CompanyCulture } from "../../components/CompanyCulture/CompanyCulture";
-import { mockJobs } from "../../data/jobsData";
 import type { Job } from "../../types/job";
 
 export function HomePage() {
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -19,7 +21,40 @@ export function HomePage() {
   const [isApplicationOpen, setIsApplicationOpen] = useState(false);
   const [jobForApplication, setJobForApplication] = useState<Job | null>(null);
 
-  const filteredJobs = mockJobs.filter((job) => {
+  useEffect(() => {
+    async function loadJobs() {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from("jobs")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+      if (!error && data) {
+        const mappedJobs: Job[] = data.map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          category: item.category,
+          location: item.location,
+          salary: Number(item.salary),
+          activities: item.activities,
+          education: item.education,
+          schedule: item.schedule,
+          benefits: item.benefits || [],
+          requirements: item.requirements || [],
+          whatsappContact: item.whatsapp_contact,
+          isActive: item.is_active,
+          createdAt: item.created_at,
+        }));
+        setJobs(mappedJobs);
+      }
+      setIsLoading(false);
+    }
+
+    loadJobs();
+  }, []);
+
+  const filteredJobs = jobs.filter((job) => {
     const matchesSearch = job.title
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
@@ -66,7 +101,17 @@ export function HomePage() {
           </p>
         </div>
 
-        {filteredJobs.length === 0 ? (
+        {isLoading ? (
+          <div
+            style={{
+              textAlign: "center",
+              padding: "3rem",
+              color: "var(--color-text-muted)",
+            }}
+          >
+            Carregando oportunidades disponíveis...
+          </div>
+        ) : filteredJobs.length === 0 ? (
           <div
             style={{
               textAlign: "center",
