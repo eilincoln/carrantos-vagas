@@ -15,6 +15,13 @@
   align-items: center;
 }
 
+.logo {
+  height: 38px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
 .brand {
   display: flex;
   align-items: center;
