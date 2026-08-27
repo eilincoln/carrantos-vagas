@@ -4,6 +4,7 @@ import { Hero } from "./components/Hero/Hero";
 import { JobFilters } from "./components/JobFilters/JobFilters";
 import { JobCard } from "./components/JobCard/JobCard";
 import { JobModal } from "./components/JobModal/JobModal";
+import { ApplicationModal } from "./components/ApplicationModal/ApplicationModal";
 import { TalentBank } from "./components/TalentBank/TalentBank";
 import { CompanyCulture } from "./components/CompanyCulture/CompanyCulture";
 import { mockJobs } from "./data/jobsData";
@@ -13,7 +14,11 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+
+  // Controle dos modais
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [isApplicationOpen, setIsApplicationOpen] = useState(false);
+  const [jobForApplication, setJobForApplication] = useState<Job | null>(null);
 
   const filteredJobs = mockJobs.filter((job) => {
     const matchesSearch = job.title
@@ -28,6 +33,12 @@ function App() {
 
     return matchesSearch && matchesLocation && matchesCategory;
   });
+
+  const handleOpenApplication = (job: Job | null) => {
+    setSelectedJob(null); // Fecha o modal de detalhes
+    setJobForApplication(job); // Define a vaga (ou null para banco de talentos)
+    setIsApplicationOpen(true); // Abre o formulário
+  };
 
   return (
     <div>
@@ -95,14 +106,25 @@ function App() {
         )}
 
         {/* Seção Banco de Talentos */}
-        <TalentBank />
+        <TalentBank onOpenApplication={() => handleOpenApplication(null)} />
 
         {/* Seção Cultura & Diferenciais */}
         <CompanyCulture />
       </main>
 
-      {/* Modal de Detalhes da Vaga */}
-      <JobModal job={selectedJob} onClose={() => setSelectedJob(null)} />
+      {/* Modal 1: Detalhes da Vaga */}
+      <JobModal
+        job={selectedJob}
+        onClose={() => setSelectedJob(null)}
+        onApply={(job) => handleOpenApplication(job)}
+      />
+
+      {/* Modal 2: Formulário Interno de Candidatura */}
+      <ApplicationModal
+        job={jobForApplication}
+        isOpen={isApplicationOpen}
+        onClose={() => setIsApplicationOpen(false)}
+      />
     </div>
   );
 }

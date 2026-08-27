@@ -1,6 +1,10 @@
 import styles from "./TalentBank.module.css";
 
-export function TalentBank() {
+interface TalentBankProps {
+  onOpenApplication: () => void;
+}
+
+export function TalentBank({ onOpenApplication }: TalentBankProps) {
   return (
     <section className={styles.section} aria-labelledby="talent-bank-title">
       <div className={styles.container}>
@@ -14,14 +18,13 @@ export function TalentBank() {
           Portaria, Segurança, Facilities ou Administrativo, nossa equipe
           entrará em contato.
         </p>
-        <a
-          href="https://forms.google.com"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
           className={styles.actionButton}
+          onClick={onOpenApplication}
         >
           <span>Cadastrar no Banco de Talentos ↗</span>
-        </a>
+        </button>
       </div>
     </section>
   );

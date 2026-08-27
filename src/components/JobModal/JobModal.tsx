@@ -5,10 +5,10 @@ import styles from "./JobModal.module.css";
 interface JobModalProps {
   job: Job | null;
   onClose: () => void;
+  onApply: (job: Job) => void;
 }
 
-export function JobModal({ job, onClose }: JobModalProps) {
-  // Fecha o modal ao pressionar a tecla ESC
+export function JobModal({ job, onClose, onApply }: JobModalProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -20,13 +20,11 @@ export function JobModal({ job, onClose }: JobModalProps) {
 
   if (!job) return null;
 
-  // Formatação monetária padronizada
   const formattedSalary = new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
   }).format(job.salary);
 
-  // Mensagem codificada para o WhatsApp
   const whatsappMessage = encodeURIComponent(
     `Olá! Tenho interesse na vaga de *${job.title}* (${job.location}) anunciada no portal de vagas da Carrantos. Segue meu currículo para avaliação.`,
   );
@@ -39,7 +37,6 @@ export function JobModal({ job, onClose }: JobModalProps) {
       role="dialog"
       aria-modal="true"
     >
-      {/* Impede que o clique dentro do modal feche a janela */}
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <div>
@@ -129,14 +126,13 @@ export function JobModal({ job, onClose }: JobModalProps) {
           >
             <span>💬 Candidatar via WhatsApp</span>
           </a>
-          <a
-            href="https://forms.google.com" //Colocar o link futuramente... ainda não tenho
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
             className={styles.btnForm}
+            onClick={() => onApply(job)}
           >
             <span>📋 Preencher Formulário</span>
-          </a>
+          </button>
         </div>
       </div>
     </div>
