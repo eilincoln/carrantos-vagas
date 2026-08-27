@@ -20,6 +20,7 @@ export function JobFilters({
 }: JobFiltersProps) {
   const locations: JobLocation[] = [
     "Itatiba - SP",
+    "Louveira - SP",
     "Atibaia - SP",
     "Campinas - SP",
     "Jundiaí - SP",

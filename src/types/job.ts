@@ -9,6 +9,7 @@ export type JobLocation =
   | "Atibaia - SP"
   | "Campinas - SP"
   | "Jundiaí - SP"
+  | "Louveira - SP"
   | string;
 
 export interface Job {

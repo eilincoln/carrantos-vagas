@@ -1,9 +1,17 @@
 import { useState, useEffect, useMemo, type FormEvent } from "react";
+import { Toaster, toast } from "sonner";
 import { supabase } from "../../lib/supabase";
 import { NewJobModal } from "./NewJobModal";
 import { EditJobModal } from "./EditJobModal";
 import type { Job } from "../../types/job";
 import styles from "./Admin.module.css";
+
+type CandidateStatus =
+  | "novo"
+  | "triagem"
+  | "entrevista"
+  | "aprovado"
+  | "reprovado";
 
 interface ApplicationRecord {
   id: string;
@@ -14,13 +22,24 @@ interface ApplicationRecord {
   phone: string;
   city: string;
   resume_url: string;
+  status?: CandidateStatus;
 }
+
+const statusConfig: Record<
+  CandidateStatus,
+  { label: string; bg: string; color: string }
+> = {
+  novo: { label: "Novo", bg: "#e0f2fe", color: "#0369a1" },
+  triagem: { label: "Em Triagem", bg: "#fef3c7", color: "#b45309" },
+  entrevista: { label: "Entrevista", bg: "#f3e8ff", color: "#6b21a8" },
+  aprovado: { label: "Aprovado", bg: "#dcfce7", color: "#15803d" },
+  reprovado: { label: "Reprovado", bg: "#fee2e2", color: "#b91c1c" },
+};
 
 export function AdminPage() {
   const [session, setSession] = useState<unknown>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const [activeTab, setActiveTab] = useState<"applications" | "jobs">(
@@ -29,14 +48,13 @@ export function AdminPage() {
   const [applications, setApplications] = useState<ApplicationRecord[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
 
-  // Modais de Criação e Edição
   const [isNewJobOpen, setIsNewJobOpen] = useState(false);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
 
   // Filtros
   const [appSearch, setAppSearch] = useState("");
   const [appJobFilter, setAppJobFilter] = useState("");
-  const [appCityFilter, setAppCityFilter] = useState("");
+  const [appStatusFilter, setAppStatusFilter] = useState<string>("");
   const [jobStatusFilter, setJobStatusFilter] = useState<
     "all" | "active" | "paused"
   >("all");
@@ -101,6 +119,26 @@ export function AdminPage() {
     }
   };
 
+  const handleUpdateStatus = async (
+    appId: string,
+    newStatus: CandidateStatus,
+  ) => {
+    const { error } = await supabase
+      .from("applications")
+      .update({ status: newStatus })
+      .eq("id", appId);
+
+    if (error) {
+      toast.error("Erro ao atualizar status.");
+      return;
+    }
+
+    setApplications((prev) =>
+      prev.map((a) => (a.id === appId ? { ...a, status: newStatus } : a)),
+    );
+    toast.success(`Status atualizado para "${statusConfig[newStatus].label}"`);
+  };
+
   const handleToggleJobStatus = async (
     jobId: string,
     currentStatus: boolean | undefined,
@@ -115,60 +153,48 @@ export function AdminPage() {
       setJobs((prev) =>
         prev.map((j) => (j.id === jobId ? { ...j, isActive: nextStatus } : j)),
       );
+      toast.success(
+        nextStatus ? "Vaga ativada no site!" : "Vaga pausada com sucesso.",
+      );
     }
   };
 
-  // Excluir Vaga
   const handleDeleteJob = async (jobId: string, jobTitle: string) => {
-    if (
-      !window.confirm(
-        `Tem certeza que deseja excluir a vaga "${jobTitle}" permanentemente?`,
-      )
-    ) {
+    if (!window.confirm(`Excluir a vaga "${jobTitle}" permanentemente?`))
       return;
-    }
 
     const { error } = await supabase.from("jobs").delete().eq("id", jobId);
     if (!error) {
       setJobs((prev) => prev.filter((j) => j.id !== jobId));
+      toast.success("Vaga excluída com sucesso.");
     } else {
-      alert(`Erro ao excluir vaga: ${error.message}`);
+      toast.error("Erro ao excluir vaga.");
     }
   };
 
-  // Excluir Candidatura
   const handleDeleteApplication = async (
     appId: string,
     candidateName: string,
     resumeUrl: string,
   ) => {
-    if (
-      !window.confirm(
-        `Excluir a candidatura de "${candidateName}" e seu currículo?`,
-      )
-    ) {
-      return;
-    }
+    if (!window.confirm(`Excluir a candidatura de "${candidateName}"?`)) return;
 
-    // 1. Remove o registro do banco
     const { error: dbError } = await supabase
       .from("applications")
       .delete()
       .eq("id", appId);
     if (dbError) {
-      alert(`Erro ao excluir: ${dbError.message}`);
+      toast.error("Erro ao excluir registro.");
       return;
     }
 
-    // 2. Remove o arquivo do Storage
     await supabase.storage.from("resumes").remove([resumeUrl]);
-
     setApplications((prev) => prev.filter((a) => a.id !== appId));
+    toast.success("Candidatura removida com sucesso.");
   };
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
-    setErrorMsg("");
     setIsLoading(true);
 
     const { error } = await supabase.auth.signInWithPassword({
@@ -176,7 +202,11 @@ export function AdminPage() {
       password: password.trim(),
     });
 
-    if (error) setErrorMsg("Credenciais inválidas.");
+    if (error) {
+      toast.error("Credenciais inválidas. Verifique seu e-mail e senha.");
+    } else {
+      toast.success("Bem-vindo(a) ao Painel Carrantos!");
+    }
     setIsLoading(false);
   };
 
@@ -185,6 +215,7 @@ export function AdminPage() {
     setSession(null);
     setApplications([]);
     setJobs([]);
+    toast.info("Sessão encerrada.");
   };
 
   const handleDownloadResume = async (filePath: string) => {
@@ -192,10 +223,21 @@ export function AdminPage() {
       .from("resumes")
       .createSignedUrl(filePath, 60);
     if (error || !data) {
-      alert("Erro ao gerar download do currículo.");
+      toast.error("Erro ao gerar download seguro.");
       return;
     }
     window.open(data.signedUrl, "_blank");
+  };
+
+  const handleOpenWhatsApp = (candidate: ApplicationRecord) => {
+    const cleanPhone = candidate.phone.replace(/\D/g, "");
+    const phoneWithCountry = cleanPhone.startsWith("55")
+      ? cleanPhone
+      : `55${cleanPhone}`;
+    const message = encodeURIComponent(
+      `Olá ${candidate.full_name}, tudo bem? Aqui é do RH do Grupo Carrantos! Vimos sua candidatura para a vaga de ${candidate.job_title} e gostaríamos de conversar com você.`,
+    );
+    window.open(`https://wa.me/${phoneWithCountry}?text=${message}`, "_blank");
   };
 
   const filteredApplications = useMemo(() => {
@@ -207,13 +249,13 @@ export function AdminPage() {
         app.job_title.toLowerCase().includes(searchLower);
 
       const matchesJob = appJobFilter ? app.job_title === appJobFilter : true;
-      const matchesCity = appCityFilter
-        ? app.city.toLowerCase().includes(appCityFilter.toLowerCase())
+      const matchesStatus = appStatusFilter
+        ? (app.status || "novo") === appStatusFilter
         : true;
 
-      return matchesSearch && matchesJob && matchesCity;
+      return matchesSearch && matchesJob && matchesStatus;
     });
-  }, [applications, appSearch, appJobFilter, appCityFilter]);
+  }, [applications, appSearch, appJobFilter, appStatusFilter]);
 
   const filteredJobs = useMemo(() => {
     return jobs.filter((job) => {
@@ -243,11 +285,11 @@ export function AdminPage() {
 
   const handleExportCSV = () => {
     if (filteredApplications.length === 0) return;
-    const headers = "Data,Vaga,Nome,Email,Telefone,Cidade\n";
+    const headers = "Data,Status,Vaga,Nome,Email,Telefone,Cidade\n";
     const rows = filteredApplications
       .map(
         (a) =>
-          `"${new Date(a.created_at).toLocaleDateString("pt-BR")}","${a.job_title}","${a.full_name}","${a.email}","${a.phone}","${a.city}"`,
+          `"${new Date(a.created_at).toLocaleDateString("pt-BR")}","${a.status || "novo"}","${a.job_title}","${a.full_name}","${a.email}","${a.phone}","${a.city}"`,
       )
       .join("\n");
 
@@ -259,20 +301,22 @@ export function AdminPage() {
     link.setAttribute("href", url);
     link.setAttribute(
       "download",
-      `candidaturas_${new Date().toISOString().slice(0, 10)}.csv`,
+      `candidaturas_carrantos_${new Date().toISOString().slice(0, 10)}.csv`,
     );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    toast.success("Relatório CSV baixado com sucesso!");
   };
 
   if (!session) {
     return (
       <div className={styles.container}>
+        <Toaster position="top-center" richColors />
         <div className={styles.loginWrapper}>
           <h1 className={styles.loginTitle}>Acesso Restrito RH</h1>
           <p className={styles.loginSubtitle}>Painel de Gestão Carrantos</p>
-          {errorMsg && <p className={styles.errorText}>⚠️ {errorMsg}</p>}
+
           <form onSubmit={handleLogin} className={styles.form}>
             <div className={styles.inputGroup}>
               <label className={styles.label}>E-mail Corporativo</label>
@@ -314,6 +358,8 @@ export function AdminPage() {
 
   return (
     <div className={styles.container}>
+      <Toaster position="top-right" richColors />
+
       <header className={styles.dashboardHeader}>
         <div>
           <span
@@ -545,7 +591,7 @@ export function AdminPage() {
           borderRadius: "var(--radius-md)",
           border: "1px solid var(--color-border)",
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
           gap: "0.75rem",
         }}
       >
@@ -553,7 +599,7 @@ export function AdminPage() {
           <>
             <input
               type="text"
-              placeholder="Buscar por nome, e-mail ou cargo..."
+              placeholder="Buscar por candidato, e-mail..."
               className={styles.input}
               value={appSearch}
               onChange={(e) => setAppSearch(e.target.value)}
@@ -570,13 +616,18 @@ export function AdminPage() {
                 </option>
               ))}
             </select>
-            <input
-              type="text"
-              placeholder="Filtrar por cidade..."
+            <select
               className={styles.input}
-              value={appCityFilter}
-              onChange={(e) => setAppCityFilter(e.target.value)}
-            />
+              value={appStatusFilter}
+              onChange={(e) => setAppStatusFilter(e.target.value)}
+            >
+              <option value="">Todos os Status</option>
+              <option value="novo">Novo</option>
+              <option value="triagem">Em Triagem</option>
+              <option value="entrevista">Entrevista</option>
+              <option value="aprovado">Aprovado</option>
+              <option value="reprovado">Reprovado</option>
+            </select>
           </>
         ) : (
           <>
@@ -608,7 +659,7 @@ export function AdminPage() {
       <main>
         <div className={styles.tableWrapper}>
           {activeTab === "applications" ? (
-            /* TABELA DE CANDIDATURAS COM DOWNLOAD E EXCLUSÃO */
+            /* TABELA DE CANDIDATURAS COM STATUS E WHATSAPP */
             isLoading ? (
               <p
                 style={{
@@ -633,80 +684,151 @@ export function AdminPage() {
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th className={styles.th}>Data/Hora</th>
-                    <th className={styles.th}>Vaga / Destino</th>
-                    <th className={styles.th}>Candidato</th>
+                    <th className={styles.th}>Data</th>
+                    <th className={styles.th}>Status</th>
+                    <th className={styles.th}>Vaga</th>
+                    <th className={styles.th}>Candidato / Cidade</th>
                     <th className={styles.th}>Contato</th>
-                    <th className={styles.th}>Cidade</th>
                     <th className={styles.th}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredApplications.map((app) => (
-                    <tr key={app.id}>
-                      <td className={styles.td}>
-                        {new Date(app.created_at).toLocaleDateString("pt-BR", {
-                          day: "2-digit",
-                          month: "2-digit",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </td>
-                      <td className={styles.td}>
-                        <strong>{app.job_title}</strong>
-                      </td>
-                      <td className={styles.td}>{app.full_name}</td>
-                      <td className={styles.td}>
-                        <div>{app.phone}</div>
-                        <div
-                          style={{
-                            fontSize: "0.75rem",
-                            color: "var(--color-text-muted)",
-                          }}
-                        >
-                          {app.email}
-                        </div>
-                      </td>
-                      <td className={styles.td}>{app.city}</td>
-                      <td className={styles.td}>
-                        <div style={{ display: "flex", gap: "0.5rem" }}>
-                          <button
-                            onClick={() => handleDownloadResume(app.resume_url)}
-                            className={styles.downloadBtn}
-                          >
-                            📄 PDF
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleDeleteApplication(
+                  {filteredApplications.map((app) => {
+                    const currentStatus = (app.status ||
+                      "novo") as CandidateStatus;
+                    const statusInfo =
+                      statusConfig[currentStatus] || statusConfig.novo;
+
+                    return (
+                      <tr key={app.id}>
+                        <td className={styles.td}>
+                          {new Date(app.created_at).toLocaleDateString(
+                            "pt-BR",
+                            {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                            },
+                          )}
+                        </td>
+                        <td className={styles.td}>
+                          <select
+                            value={currentStatus}
+                            onChange={(e) =>
+                              handleUpdateStatus(
                                 app.id,
-                                app.full_name,
-                                app.resume_url,
+                                e.target.value as CandidateStatus,
                               )
                             }
                             style={{
-                              background: "#fee2e2",
-                              color: "#b91c1c",
+                              backgroundColor: statusInfo.bg,
+                              color: statusInfo.color,
                               border: "none",
-                              padding: "0.4rem 0.6rem",
-                              borderRadius: "var(--radius-sm)",
+                              padding: "0.3rem 0.6rem",
+                              borderRadius: "999px",
+                              fontSize: "0.75rem",
+                              fontWeight: 700,
                               cursor: "pointer",
-                              fontSize: "0.8rem",
-                              fontWeight: 600,
+                              outline: "none",
                             }}
                           >
-                            🗑️
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                            <option value="novo">Novo</option>
+                            <option value="triagem">Em Triagem</option>
+                            <option value="entrevista">Entrevista</option>
+                            <option value="aprovado">Aprovado</option>
+                            <option value="reprovado">Reprovado</option>
+                          </select>
+                        </td>
+                        <td className={styles.td}>
+                          <strong>{app.job_title}</strong>
+                        </td>
+                        <td className={styles.td}>
+                          <div>{app.full_name}</div>
+                          <div
+                            style={{
+                              fontSize: "0.75rem",
+                              color: "var(--color-text-muted)",
+                            }}
+                          >
+                            {app.city}
+                          </div>
+                        </td>
+                        <td className={styles.td}>
+                          <div>{app.phone}</div>
+                          <div
+                            style={{
+                              fontSize: "0.75rem",
+                              color: "var(--color-text-muted)",
+                            }}
+                          >
+                            {app.email}
+                          </div>
+                        </td>
+                        <td className={styles.td}>
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: "0.4rem",
+                              alignItems: "center",
+                            }}
+                          >
+                            <button
+                              onClick={() =>
+                                handleDownloadResume(app.resume_url)
+                              }
+                              className={styles.downloadBtn}
+                              title="Baixar Currículo"
+                            >
+                              📄 PDF
+                            </button>
+                            <button
+                              onClick={() => handleOpenWhatsApp(app)}
+                              style={{
+                                backgroundColor: "#25D366",
+                                color: "#fff",
+                                border: "none",
+                                padding: "0.4rem 0.6rem",
+                                borderRadius: "var(--radius-sm)",
+                                cursor: "pointer",
+                                fontSize: "0.8rem",
+                                fontWeight: 600,
+                              }}
+                              title="Chamar no WhatsApp"
+                            >
+                              💬
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleDeleteApplication(
+                                  app.id,
+                                  app.full_name,
+                                  app.resume_url,
+                                )
+                              }
+                              style={{
+                                background: "#fee2e2",
+                                color: "#b91c1c",
+                                border: "none",
+                                padding: "0.4rem 0.6rem",
+                                borderRadius: "var(--radius-sm)",
+                                cursor: "pointer",
+                                fontSize: "0.8rem",
+                                fontWeight: 600,
+                              }}
+                              title="Excluir"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             )
           ) : (
-            /* TABELA DE VAGAS COM EDIÇÃO, PAUSA E EXCLUSÃO */
+            /* TABELA DE VAGAS */
             <table className={styles.table}>
               <thead>
                 <tr>

@@ -194,6 +194,7 @@ export function EditJobModal({
               >
                 <option value="Itatiba - SP">Itatiba - SP</option>
                 <option value="Atibaia - SP">Atibaia - SP</option>
+                <option value="Louveira - SP">Louveira - SP</option>
                 <option value="Campinas - SP">Campinas - SP</option>
                 <option value="Jundiaí - SP">Jundiaí - SP</option>
               </select>

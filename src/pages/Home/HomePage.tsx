@@ -4,10 +4,12 @@ import { Header } from "../../components/Header/Header";
 import { Hero } from "../../components/Hero/Hero";
 import { JobFilters } from "../../components/JobFilters/JobFilters";
 import { JobCard } from "../../components/JobCard/JobCard";
+import { JobSkeleton } from "../../components/JobSkeleton/JobSkeleton";
 import { JobModal } from "../../components/JobModal/JobModal";
 import { ApplicationModal } from "../../components/ApplicationModal/ApplicationModal";
 import { TalentBank } from "../../components/TalentBank/TalentBank";
 import { CompanyCulture } from "../../components/CompanyCulture/CompanyCulture";
+import { Footer } from "../../components/Footer/Footer";
 import type { Job } from "../../types/job";
 
 export function HomePage() {
@@ -97,19 +99,22 @@ export function HomePage() {
 
         <div style={{ marginBottom: "1.5rem" }}>
           <p style={{ color: "var(--color-text-muted)", fontSize: "0.95rem" }}>
-            Vagas encontradas: <strong>{filteredJobs.length}</strong>
+            Vagas encontradas:{" "}
+            <strong>{isLoading ? "..." : filteredJobs.length}</strong>
           </p>
         </div>
 
         {isLoading ? (
           <div
             style={{
-              textAlign: "center",
-              padding: "3rem",
-              color: "var(--color-text-muted)",
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+              gap: "1.5rem",
             }}
           >
-            Carregando oportunidades disponíveis...
+            <JobSkeleton />
+            <JobSkeleton />
+            <JobSkeleton />
           </div>
         ) : filteredJobs.length === 0 ? (
           <div
@@ -152,6 +157,8 @@ export function HomePage() {
         <TalentBank onOpenApplication={() => handleOpenApplication(null)} />
         <CompanyCulture />
       </main>
+
+      <Footer />
 
       <JobModal
         job={selectedJob}
