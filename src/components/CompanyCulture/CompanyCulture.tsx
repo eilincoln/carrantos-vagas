@@ -30,7 +30,7 @@ export function CompanyCulture() {
         </h2>
         <p className={styles.subtitle}>
           Construa seu futuro em uma das empresas mais respeitadas de Segurança
-          e Facilities do interior paulista[cite: 1].
+          e Facilities do interior paulista.
         </p>
       </div>
 
