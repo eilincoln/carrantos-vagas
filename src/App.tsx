@@ -4,6 +4,8 @@ import { Hero } from "./components/Hero/Hero";
 import { JobFilters } from "./components/JobFilters/JobFilters";
 import { JobCard } from "./components/JobCard/JobCard";
 import { JobModal } from "./components/JobModal/JobModal";
+import { TalentBank } from "./components/TalentBank/TalentBank";
+import { CompanyCulture } from "./components/CompanyCulture/CompanyCulture";
 import { mockJobs } from "./data/jobsData";
 import type { Job } from "./types/job";
 
@@ -67,11 +69,11 @@ function App() {
             <h3
               style={{ color: "var(--color-primary)", marginBottom: "0.5rem" }}
             >
-              Nenhuma vaga encontrada
+              Nenhuma vaga aberta com estes filtros
             </h3>
             <p style={{ color: "var(--color-text-muted)" }}>
-              Tente alterar os termos da busca ou limpar os filtros de cidade e
-              área.
+              Experimente limpar os seletores ou cadastre seu currículo no nosso
+              Banco de Talentos logo abaixo.
             </p>
           </div>
         ) : (
@@ -91,6 +93,12 @@ function App() {
             ))}
           </div>
         )}
+
+        {/* Seção Banco de Talentos */}
+        <TalentBank />
+
+        {/* Seção Cultura & Diferenciais */}
+        <CompanyCulture />
       </main>
 
       {/* Modal de Detalhes da Vaga */}
