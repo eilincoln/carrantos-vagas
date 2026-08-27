@@ -1,4 +1,5 @@
 import { useState, type FormEvent, type ChangeEvent } from "react";
+import { supabase } from "../../lib/supabase";
 import type { Job } from "../../types/job";
 import styles from "./ApplicationModal.module.css";
 
@@ -18,14 +19,16 @@ export function ApplicationModal({
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
   const [resumeFile, setResumeFile] = useState<File | null>(null);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
 
   if (!isOpen) return null;
 
-  // Formatação automática do telefone enquanto o usuário digita
+  // Formatação automática do telefone enquanto digita
   const handlePhoneChange = (e: ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, ""); // Remove tudo que não é dígito
+    let value = e.target.value.replace(/\D/g, "");
     if (value.length > 11) value = value.slice(0, 11);
 
     if (value.length > 6) {
@@ -37,7 +40,7 @@ export function ApplicationModal({
     setPhone(value);
   };
 
-  // Validação estrita do arquivo de currículo (PDF até 5MB)
+  // Validação estrita do arquivo (apenas PDF até 5MB)
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     setErrorMessage("");
@@ -62,33 +65,69 @@ export function ApplicationModal({
     }
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
 
     if (!fullName || !email || !phone || !city || !resumeFile) {
       setErrorMessage(
-        "Por favor, preencha todos os campos e anexe seu currículo em PDF.",
+        "Por favor, preencha todos os campos obrigatórios e anexe o currículo em PDF.",
       );
       return;
     }
 
-    // Estrutura do formulário validada (no próximo bloco conectaremos ao Supabase)
-    console.log("Candidatura pronta para envio:", {
-      jobId: job?.id || "banco-talentos",
-      jobTitle: job?.title || "Banco de Talentos",
-      fullName,
-      email,
-      phone,
-      city,
-      fileName: resumeFile.name,
-    });
+    setIsSubmitting(true);
 
-    setIsSuccess(true);
+    try {
+      // 1. Gera um nome de arquivo único com timestamp e sanitização de caracteres
+      const fileExt = resumeFile.name.split(".").pop();
+      const sanitizedName = fullName.toLowerCase().replace(/[^a-z0-9]/g, "-");
+      const filePath = `${Date.now()}_${sanitizedName}.${fileExt}`;
+
+      // 2. Upload do PDF para o bucket 'resumes' do Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from("resumes")
+        .upload(filePath, resumeFile, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadError) {
+        throw new Error(`Erro ao enviar o currículo: ${uploadError.message}`);
+      }
+
+      // 3. Gravação dos dados na tabela 'applications'
+      const { error: dbError } = await supabase.from("applications").insert([
+        {
+          job_id: job ? String(job.id) : "banco-talentos",
+          job_title: job ? job.title : "Banco de Talentos",
+          full_name: fullName.trim(),
+          email: email.trim().toLowerCase(),
+          phone: phone.trim(),
+          city: city.trim(),
+          resume_url: filePath,
+        },
+      ]);
+
+      if (dbError) {
+        throw new Error(`Erro ao registrar candidatura: ${dbError.message}`);
+      }
+
+      setIsSuccess(true);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setErrorMessage(err.message);
+      } else {
+        setErrorMessage(
+          "Ocorreu um erro inesperado ao enviar seus dados. Tente novamente.",
+        );
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleModalClose = () => {
-    // Reseta os estados ao fechar
     setIsSuccess(false);
     setErrorMessage("");
     setFullName("");
@@ -132,7 +171,7 @@ export function ApplicationModal({
             <h3
               style={{ color: "var(--color-primary)", marginBottom: "0.5rem" }}
             >
-              Candidatura Enviada!
+              Candidatura Enviada com Sucesso!
             </h3>
             <p
               style={{
@@ -142,9 +181,8 @@ export function ApplicationModal({
                 marginBottom: "1.5rem",
               }}
             >
-              Seus dados e currículo foram registrados com sucesso. Nossa equipe
-              de Recursos Humanos entrará em contato caso seu perfil atenda aos
-              requisitos da vaga.
+              Seus dados e currículo foram salvos com segurança em nosso banco
+              de dados. O time de Recursos Humanos avaliará seu perfil.
             </p>
             <button
               type="button"
@@ -169,6 +207,7 @@ export function ApplicationModal({
                 id="fullname"
                 type="text"
                 required
+                disabled={isSubmitting}
                 className={styles.input}
                 placeholder="Ex: Carlos Silva"
                 value={fullName}
@@ -184,6 +223,7 @@ export function ApplicationModal({
                 id="email"
                 type="email"
                 required
+                disabled={isSubmitting}
                 className={styles.input}
                 placeholder="seu.email@exemplo.com"
                 value={email}
@@ -199,6 +239,7 @@ export function ApplicationModal({
                 id="phone"
                 type="tel"
                 required
+                disabled={isSubmitting}
                 className={styles.input}
                 placeholder="(11) 99999-9999"
                 value={phone}
@@ -214,6 +255,7 @@ export function ApplicationModal({
                 id="city"
                 type="text"
                 required
+                disabled={isSubmitting}
                 className={styles.input}
                 placeholder="Ex: Itatiba - SP"
                 value={city}
@@ -230,6 +272,7 @@ export function ApplicationModal({
                 type="file"
                 accept=".pdf"
                 required
+                disabled={isSubmitting}
                 className={styles.fileInput}
                 onChange={handleFileChange}
               />
@@ -238,8 +281,14 @@ export function ApplicationModal({
               </span>
             </div>
 
-            <button type="submit" className={styles.submitButton}>
-              Enviar Candidatura
+            <button
+              type="submit"
+              className={styles.submitButton}
+              disabled={isSubmitting}
+            >
+              {isSubmitting
+                ? "Enviando dados com segurança..."
+                : "Enviar Candidatura"}
             </button>
           </form>
         )}
