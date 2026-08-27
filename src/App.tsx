@@ -3,6 +3,7 @@ import { Header } from "./components/Header/Header";
 import { Hero } from "./components/Hero/Hero";
 import { JobFilters } from "./components/JobFilters/JobFilters";
 import { JobCard } from "./components/JobCard/JobCard";
+import { JobModal } from "./components/JobModal/JobModal";
 import { mockJobs } from "./data/jobsData";
 import type { Job } from "./types/job";
 
@@ -10,6 +11,7 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   const filteredJobs = mockJobs.filter((job) => {
     const matchesSearch = job.title
@@ -24,10 +26,6 @@ function App() {
 
     return matchesSearch && matchesLocation && matchesCategory;
   });
-
-  const handleSelectJob = (job: Job) => {
-    console.log("Vaga selecionada para modal:", job);
-  };
 
   return (
     <div>
@@ -50,14 +48,7 @@ function App() {
           onCategoryChange={setSelectedCategory}
         />
 
-        <div
-          style={{
-            marginBottom: "1.5rem",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
+        <div style={{ marginBottom: "1.5rem" }}>
           <p style={{ color: "var(--color-text-muted)", fontSize: "0.95rem" }}>
             Vagas encontradas: <strong>{filteredJobs.length}</strong>
           </p>
@@ -92,11 +83,18 @@ function App() {
             }}
           >
             {filteredJobs.map((job) => (
-              <JobCard key={job.id} job={job} onSelectJob={handleSelectJob} />
+              <JobCard
+                key={job.id}
+                job={job}
+                onSelectJob={(job) => setSelectedJob(job)}
+              />
             ))}
           </div>
         )}
       </main>
+
+      {/* Modal de Detalhes da Vaga */}
+      <JobModal job={selectedJob} onClose={() => setSelectedJob(null)} />
     </div>
   );
 }
