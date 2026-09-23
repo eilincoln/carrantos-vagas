@@ -11,6 +11,7 @@ import { TalentBank } from "../../components/TalentBank/TalentBank";
 import { CompanyCulture } from "../../components/CompanyCulture/CompanyCulture";
 import { Footer } from "../../components/Footer/Footer";
 import type { Job } from "../../types/job";
+import { getJobCode } from "../../utils/formatters";
 
 export function HomePage() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -57,18 +58,22 @@ export function HomePage() {
   }, []);
 
   const filteredJobs = jobs.filter((job) => {
-    const matchesSearch = job.title
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesLocation = selectedLocation
-      ? job.location === selectedLocation
-      : true;
-    const matchesCategory = selectedCategory
-      ? job.category === selectedCategory
-      : true;
+  const jobCode = getJobCode(job.id, job.location).toLowerCase();
+  const query = searchTerm.toLowerCase();
 
-    return matchesSearch && matchesLocation && matchesCategory;
-  });
+  const matchesSearch = 
+    job.title.toLowerCase().includes(query) ||
+    jobCode.includes(query);
+
+  const matchesLocation = selectedLocation
+    ? job.location === selectedLocation
+    : true;
+  const matchesCategory = selectedCategory
+    ? job.category === selectedCategory
+    : true;
+
+  return matchesSearch && matchesLocation && matchesCategory;
+});
 
   const handleOpenApplication = (job: Job | null) => {
     setSelectedJob(null);

@@ -1,4 +1,5 @@
 import type { Job } from "../../types/job";
+import { getJobCode } from "../../utils/formatters";
 import styles from "./JobCard.module.css";
 
 interface JobCardProps {
@@ -12,10 +13,13 @@ export function JobCard({ job, onSelectJob }: JobCardProps) {
     currency: "BRL",
   }).format(job.salary);
 
+  const jobCode = getJobCode(job.id, job.location);
+
   return (
     <article className={styles.card}>
       <div className={styles.header}>
         <div className={styles.badges}>
+          <span className={styles.badgeCode}>{jobCode}</span>
           <span className={styles.badgeCategory}>{job.category}</span>
           <span className={styles.badgeLocation}>📍 {job.location}</span>
         </div>
