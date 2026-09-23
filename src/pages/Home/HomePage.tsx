@@ -50,6 +50,14 @@ export function HomePage() {
           createdAt: item.created_at,
         }));
         setJobs(mappedJobs);
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetJobId = urlParams.get("vaga");
+        if (targetJobId) {
+        const found = mappedJobs.find((j) => j.id === targetJobId);
+        if (found) {
+        setSelectedJob(found);
+  }
+}
       }
       setIsLoading(false);
     }
