@@ -689,27 +689,22 @@ export function AdminPage() {
                     <th className={styles.th}>Vaga</th>
                     <th className={styles.th}>Candidato / Cidade</th>
                     <th className={styles.th}>Contato</th>
-                    <th className={styles.th}>Ações</th>
+                    <th className={styles.th} style={{ textAlign: "right" }}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredApplications.map((app) => {
-                    const currentStatus = (app.status ||
-                      "novo") as CandidateStatus;
-                    const statusInfo =
-                      statusConfig[currentStatus] || statusConfig.novo;
+                    const currentStatus = (app.status || "novo") as CandidateStatus;
+                    const statusInfo = statusConfig[currentStatus] || statusConfig.novo;
 
                     return (
                       <tr key={app.id}>
                         <td className={styles.td}>
-                          {new Date(app.created_at).toLocaleDateString(
-                            "pt-BR",
-                            {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "numeric",
-                            },
-                          )}
+                          {new Date(app.created_at).toLocaleDateString("pt-BR", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          })}
                         </td>
                         <td className={styles.td}>
                           <select
@@ -717,7 +712,7 @@ export function AdminPage() {
                             onChange={(e) =>
                               handleUpdateStatus(
                                 app.id,
-                                e.target.value as CandidateStatus,
+                                e.target.value as CandidateStatus
                               )
                             }
                             style={{
@@ -739,10 +734,10 @@ export function AdminPage() {
                             <option value="reprovado">Reprovado</option>
                           </select>
                         </td>
-                        <td className={styles.td}>
+                        <td className={`${styles.td} ${styles.jobTitleCell}`}>
                           <strong>{app.job_title}</strong>
                         </td>
-                        <td className={styles.td}>
+                        <td className={`${styles.td} ${styles.candidateCell}`}>
                           <div>{app.full_name}</div>
                           <div
                             style={{
@@ -753,29 +748,23 @@ export function AdminPage() {
                             {app.city}
                           </div>
                         </td>
-                        <td className={styles.td}>
-                          <div>{app.phone}</div>
-                          <div
-                            style={{
-                              fontSize: "0.75rem",
-                              color: "var(--color-text-muted)",
-                            }}
-                          >
-                            {app.email}
-                          </div>
-                        </td>
-                        <td className={styles.td}>
+                        <td className={`${styles.td} ${styles.contactCell}`}>
+  <div style={{ whiteSpace: "nowrap" }}>{app.phone}</div>
+  <div className={styles.emailText}>
+    {app.email}
+  </div>
+</td>
+                        <td className={`${styles.td} ${styles.actionsCell}`}>
                           <div
                             style={{
                               display: "flex",
                               gap: "0.4rem",
                               alignItems: "center",
+                              justifyContent: "flex-end",
                             }}
                           >
                             <button
-                              onClick={() =>
-                                handleDownloadResume(app.resume_url)
-                              }
+                              onClick={() => handleDownloadResume(app.resume_url)}
                               className={styles.downloadBtn}
                               title="Baixar Currículo"
                             >
@@ -802,7 +791,7 @@ export function AdminPage() {
                                 handleDeleteApplication(
                                   app.id,
                                   app.full_name,
-                                  app.resume_url,
+                                  app.resume_url
                                 )
                               }
                               style={{
@@ -828,91 +817,68 @@ export function AdminPage() {
               </table>
             )
           ) : (
-            /* TABELA DE VAGAS */
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th className={styles.th}>Cargo</th>
-                  <th className={styles.th}>Área</th>
-                  <th className={styles.th}>Unidade</th>
-                  <th className={styles.th}>Salário Base</th>
-                  <th className={styles.th}>Status</th>
-                  <th className={styles.th}>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredJobs.length === 0 ? (
+            /* TABELA DE GESTÃO DE VAGAS */
+            jobs.length === 0 ? (
+              <p
+                style={{
+                  padding: "2rem",
+                  textAlign: "center",
+                  color: "var(--color-text-muted)",
+                }}
+              >
+                Nenhuma vaga cadastrada.
+              </p>
+            ) : (
+              <table className={styles.table}>
+                <thead>
                   <tr>
-                    <td
-                      colSpan={6}
-                      style={{
-                        padding: "2rem",
-                        textAlign: "center",
-                        color: "var(--color-text-muted)",
-                      }}
-                    >
-                      Nenhuma vaga encontrada.
-                    </td>
+                    <th className={styles.th}>Cargo</th>
+                    <th className={styles.th}>Setor</th>
+                    <th className={styles.th}>Unidade</th>
+                    <th className={styles.th}>Status</th>
+                    <th className={styles.th} style={{ textAlign: "right" }}>Ações</th>
                   </tr>
-                ) : (
-                  filteredJobs.map((job) => (
+                </thead>
+                <tbody>
+                  {filteredJobs.map((job) => (
                     <tr key={job.id}>
-                      <td className={styles.td}>
+                      <td className={`${styles.td} ${styles.jobTitleCell}`}>
                         <strong>{job.title}</strong>
                       </td>
                       <td className={styles.td}>{job.category}</td>
                       <td className={styles.td}>{job.location}</td>
                       <td className={styles.td}>
-                        {new Intl.NumberFormat("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        }).format(job.salary)}
-                      </td>
-                      <td className={styles.td}>
-                        <span
+                        <button
+                          onClick={() => handleToggleJobStatus(job.id, job.isActive)}
                           style={{
-                            backgroundColor: job.isActive
-                              ? "#dcfce7"
-                              : "#fee2e2",
-                            color: job.isActive ? "#15803d" : "#b91c1c",
-                            padding: "0.2rem 0.5rem",
+                            backgroundColor: job.isActive ? "#dcfce7" : "#fef3c7",
+                            color: job.isActive ? "#15803d" : "#b45309",
+                            border: "none",
+                            padding: "0.3rem 0.6rem",
                             borderRadius: "999px",
                             fontSize: "0.75rem",
                             fontWeight: 700,
+                            cursor: "pointer",
                           }}
                         >
                           {job.isActive ? "Ativa" : "Pausada"}
-                        </span>
+                        </button>
                       </td>
-                      <td className={styles.td}>
-                        <div style={{ display: "flex", gap: "0.4rem" }}>
+                      <td className={`${styles.td} ${styles.actionsCell}`}>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "0.4rem",
+                            alignItems: "center",
+                            justifyContent: "flex-end",
+                          }}
+                        >
                           <button
                             onClick={() => setEditingJob(job)}
-                            style={{
-                              background: "var(--color-surface)",
-                              border: "1px solid var(--color-border)",
-                              padding: "0.3rem 0.6rem",
-                              borderRadius: "var(--radius-sm)",
-                              fontSize: "0.8rem",
-                              cursor: "pointer",
-                            }}
+                            className={styles.downloadBtn}
+                            title="Editar Vaga"
                           >
                             ✏️ Editar
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleToggleJobStatus(job.id, job.isActive)
-                            }
-                            style={{
-                              background: "var(--color-surface)",
-                              border: "1px solid var(--color-border)",
-                              padding: "0.3rem 0.6rem",
-                              borderRadius: "var(--radius-sm)",
-                              fontSize: "0.8rem",
-                              cursor: "pointer",
-                            }}
-                          >
-                            {job.isActive ? "⏸️" : "▶️"}
                           </button>
                           <button
                             onClick={() => handleDeleteJob(job.id, job.title)}
@@ -920,21 +886,23 @@ export function AdminPage() {
                               background: "#fee2e2",
                               color: "#b91c1c",
                               border: "none",
-                              padding: "0.3rem 0.6rem",
+                              padding: "0.4rem 0.6rem",
                               borderRadius: "var(--radius-sm)",
-                              fontSize: "0.8rem",
                               cursor: "pointer",
+                              fontSize: "0.8rem",
+                              fontWeight: 600,
                             }}
+                            title="Excluir Vaga"
                           >
                             🗑️
                           </button>
                         </div>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+            )
           )}
         </div>
       </main>

@@ -116,6 +116,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   box-shadow: var(--shadow-sm);
 }
 
@@ -142,6 +143,27 @@
   vertical-align: middle;
 }
 
+/* Colunas customizadas para evitar quebra de layout */
+.jobTitleCell {
+  max-width: 220px;
+  min-width: 170px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  line-height: 1.35;
+}
+
+.candidateCell {
+  min-width: 160px;
+  max-width: 240px;
+  word-wrap: break-word;
+}
+
+.actionsCell {
+  white-space: nowrap;
+  width: 1%;
+}
+
 .downloadBtn {
   background-color: var(--color-secondary);
   color: #ffffff;
@@ -162,4 +184,19 @@
   color: #ef4444;
   font-size: 0.85rem;
   margin-bottom: 1rem;
+}
+
+
+.contactCell {
+  max-width: 210px;
+  min-width: 170px;
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+
+.emailText {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  word-break: break-all;
+  line-height: 1.25;
 }
