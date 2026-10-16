@@ -1,14 +1,41 @@
+import { useEffect, useState } from "react";
 import styles from "./Hero.module.css";
 import { siteImages } from "../../config/images";
 import { Icon } from "../Icon/Icon";
 
-const highlights = [
-  { value: "40+", label: "anos de mercado" },
-  { value: "5", label: "unidades na região" },
-  { value: "4", label: "áreas de atuação" },
-];
+const YEARS_IN_MARKET = 40;
+const COUNT_DURATION_MS = 1600;
+
+// Conta de 0 até o valor final com desaceleração no fim (ease-out)
+function useCountUp(target: number) {
+  const prefersReducedMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const [value, setValue] = useState(prefersReducedMotion ? target : 0);
+
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+
+    let frameId: number;
+    const start = performance.now();
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - start) / COUNT_DURATION_MS, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(eased * target));
+      if (progress < 1) frameId = requestAnimationFrame(tick);
+    };
+
+    frameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameId);
+  }, [target, prefersReducedMotion]);
+
+  return value;
+}
 
 export function Hero() {
+  const years = useCountUp(YEARS_IN_MARKET);
+
   return (
     <section className={styles.hero}>
       {siteImages.hero && (
@@ -18,7 +45,7 @@ export function Hero() {
           aria-hidden="true"
         />
       )}
-      <div className={styles.pattern} aria-hidden="true" />
+      {!siteImages.hero && <div className={styles.pattern} aria-hidden="true" />}
 
       <div className={styles.container}>
         <span className={styles.tagline}>Trabalhe Conosco</span>
@@ -42,14 +69,18 @@ export function Hero() {
           </a>
         </div>
 
-        <dl className={styles.highlights}>
-          {highlights.map((item) => (
-            <div key={item.label} className={styles.highlightItem}>
-              <dt className={styles.highlightValue}>{item.value}</dt>
-              <dd className={styles.highlightLabel}>{item.label}</dd>
-            </div>
-          ))}
-        </dl>
+        <p className={styles.highlight}>
+          <span className={styles.srOnly}>
+            Mais de {YEARS_IN_MARKET} anos de mercado, desde 1985
+          </span>
+          <span className={styles.highlightValue} aria-hidden="true">
+            {years}+
+          </span>
+          <span className={styles.highlightLabel} aria-hidden="true">
+            anos de mercado
+            <small>desde 1985</small>
+          </span>
+        </p>
       </div>
     </section>
   );
