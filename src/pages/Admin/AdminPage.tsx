@@ -60,28 +60,6 @@ export function AdminPage() {
   >("all");
   const [jobLocationFilter, setJobLocationFilter] = useState("");
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) {
-        fetchApplications();
-        fetchJobs();
-      }
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) {
-        fetchApplications();
-        fetchJobs();
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
   const fetchApplications = async () => {
     setIsLoading(true);
     const { data } = await supabase
@@ -118,6 +96,28 @@ export function AdminPage() {
       setJobs(mappedJobs);
     }
   };
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session) {
+        fetchApplications();
+        fetchJobs();
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session) {
+        fetchApplications();
+        fetchJobs();
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleUpdateStatus = async (
     appId: string,
@@ -156,6 +156,8 @@ export function AdminPage() {
       toast.success(
         nextStatus ? "Vaga ativada no site!" : "Vaga pausada com sucesso.",
       );
+    } else {
+      toast.error("Erro ao atualizar o status da vaga.");
     }
   };
 
@@ -285,15 +287,31 @@ export function AdminPage() {
 
   const handleExportCSV = () => {
     if (filteredApplications.length === 0) return;
+    // Escapa aspas e impede que valores iniciados por = + - @ virem fórmulas no Excel
+    const csvCell = (value: string) => {
+      const safe = /^[=+\-@]/.test(value) ? `'${value}` : value;
+      return `"${safe.replace(/"/g, '""')}"`;
+    };
+
     const headers = "Data,Status,Vaga,Nome,Email,Telefone,Cidade\n";
     const rows = filteredApplications
-      .map(
-        (a) =>
-          `"${new Date(a.created_at).toLocaleDateString("pt-BR")}","${a.status || "novo"}","${a.job_title}","${a.full_name}","${a.email}","${a.phone}","${a.city}"`,
+      .map((a) =>
+        [
+          new Date(a.created_at).toLocaleDateString("pt-BR"),
+          a.status || "novo",
+          a.job_title,
+          a.full_name,
+          a.email,
+          a.phone,
+          a.city,
+        ]
+          .map((value) => csvCell(String(value ?? "")))
+          .join(","),
       )
       .join("\n");
 
-    const blob = new Blob([headers + rows], {
+    // O BOM (\uFEFF) faz o Excel reconhecer o UTF-8 e exibir os acentos corretamente
+    const blob = new Blob(["\uFEFF" + headers + rows], {
       type: "text/csv;charset=utf-8;",
     });
     const url = URL.createObjectURL(blob);
@@ -672,6 +690,11 @@ export function AdminPage() {
               <div className={styles.emptyState}>
                 <Icon name="briefcase" size={28} />
                 <p>Nenhuma vaga cadastrada.</p>
+              </div>
+            ) : filteredJobs.length === 0 ? (
+              <div className={styles.emptyState}>
+                <Icon name="search" size={28} />
+                <p>Nenhuma vaga encontrada com estes filtros.</p>
               </div>
             ) : (
               <table className={styles.table}>
