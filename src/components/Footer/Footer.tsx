@@ -38,6 +38,11 @@ export function Footer() {
               </a>
             </li>
             <li>
+              <a href="#faq" className={styles.link}>
+                Perguntas Frequentes
+              </a>
+            </li>
+            <li>
               <a
                 href="https://carrantos.com.br"
                 target="_blank"

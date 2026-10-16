@@ -9,6 +9,8 @@ import { JobModal } from "../../components/JobModal/JobModal";
 import { ApplicationModal } from "../../components/ApplicationModal/ApplicationModal";
 import { TalentBank } from "../../components/TalentBank/TalentBank";
 import { HiringProcess } from "../../components/HiringProcess/HiringProcess";
+import { Benefits } from "../../components/Benefits/Benefits";
+import { Faq } from "../../components/Faq/Faq";
 import { CompanyCulture } from "../../components/CompanyCulture/CompanyCulture";
 import { Footer } from "../../components/Footer/Footer";
 import { Icon } from "../../components/Icon/Icon";
@@ -139,7 +141,9 @@ export function HomePage() {
 
         <TalentBank onOpenApplication={() => handleOpenApplication(null)} />
         <HiringProcess />
+        <Benefits />
         <CompanyCulture />
+        <Faq />
       </main>
 
       <Footer />
