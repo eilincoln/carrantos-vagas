@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import type { Job } from "../../types/job";
 import styles from "./JobModal.module.css";
+import { Icon } from "../Icon/Icon";
 
 interface JobModalProps {
   job: Job | null;
@@ -36,27 +37,19 @@ export function JobModal({ job, onClose, onApply }: JobModalProps) {
       onClick={onClose}
       role="dialog"
       aria-modal="true"
+      aria-labelledby="job-modal-title"
     >
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
-          <div>
-            <span
-              style={{
-                fontSize: "0.8rem",
-                color: "var(--color-secondary)",
-                fontWeight: 600,
-                textTransform: "uppercase",
-              }}
-            >
-              {job.category} • {job.location}
-            </span>
-            <h2
-              style={{
-                color: "var(--color-primary)",
-                fontSize: "1.4rem",
-                marginTop: "0.25rem",
-              }}
-            >
+          <div className={styles.headerContent}>
+            <div className={styles.badges}>
+              <span className={styles.badgeCategory}>{job.category}</span>
+              <span className={styles.badgeLocation}>
+                <Icon name="mapPin" size={13} />
+                {job.location}
+              </span>
+            </div>
+            <h2 id="job-modal-title" className={styles.title}>
               {job.title}
             </h2>
           </div>
@@ -66,55 +59,79 @@ export function JobModal({ job, onClose, onApply }: JobModalProps) {
             onClick={onClose}
             aria-label="Fechar"
           >
-            ✕
+            <Icon name="close" size={20} />
           </button>
         </div>
 
         <div className={styles.body}>
-          <div>
-            <h3 className={styles.sectionTitle}>📝 Descrição das Atividades</h3>
-            <p style={{ color: "var(--color-text-main)", lineHeight: 1.6 }}>
-              {job.activities}
-            </p>
+          <div className={styles.summary}>
+            <div className={styles.salaryBox}>
+              <span className={styles.summaryLabel}>Salário base</span>
+              <span className={styles.salaryValue}>{formattedSalary}</span>
+            </div>
+            <div className={styles.factBox}>
+              <span className={styles.summaryLabel}>
+                <Icon name="graduation" size={14} /> Escolaridade
+              </span>
+              <span className={styles.factValue}>{job.education}</span>
+            </div>
+            {job.schedule && (
+              <div className={styles.factBox}>
+                <span className={styles.summaryLabel}>
+                  <Icon name="calendar" size={14} /> Escala
+                </span>
+                <span className={styles.factValue}>{job.schedule}</span>
+              </div>
+            )}
           </div>
 
-          <div>
-            <h3 className={styles.sectionTitle}>🎓 Requisitos & Formação</h3>
-            <ul className={styles.list}>
-              <li className={styles.listItem}>
-                <strong>Escolaridade:</strong> {job.education}
-              </li>
-              {job.schedule && (
-                <li className={styles.listItem}>
-                  <strong>Escala:</strong> {job.schedule}
-                </li>
-              )}
-              {job.requirements?.map((req, index) => (
-                <li key={index} className={styles.listItem}>
-                  {req}
-                </li>
-              ))}
-            </ul>
-          </div>
+          <section>
+            <h3 className={styles.sectionTitle}>
+              <span className={styles.sectionIcon}>
+                <Icon name="fileText" size={16} />
+              </span>
+              Descrição das atividades
+            </h3>
+            <p className={styles.description}>{job.activities}</p>
+          </section>
 
-          <div>
-            <h3 className={styles.sectionTitle}>💰 Remuneração & Benefícios</h3>
-            <p
-              style={{
-                marginBottom: "0.5rem",
-                color: "var(--color-text-main)",
-              }}
-            >
-              <strong>Salário Base:</strong> {formattedSalary}
-            </p>
-            <ul className={styles.list}>
-              {job.benefits.map((benefit, index) => (
-                <li key={index} className={styles.listItem}>
-                  {benefit}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {job.requirements && job.requirements.length > 0 && (
+            <section>
+              <h3 className={styles.sectionTitle}>
+                <span className={styles.sectionIcon}>
+                  <Icon name="clipboard" size={16} />
+                </span>
+                Requisitos
+              </h3>
+              <ul className={styles.list}>
+                {job.requirements.map((req, index) => (
+                  <li key={index} className={styles.listItem}>
+                    <Icon name="check" size={16} className={styles.checkIcon} />
+                    {req}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {job.benefits.length > 0 && (
+            <section>
+              <h3 className={styles.sectionTitle}>
+                <span className={styles.sectionIcon}>
+                  <Icon name="gift" size={16} />
+                </span>
+                Benefícios
+              </h3>
+              <ul className={styles.benefits}>
+                {job.benefits.map((benefit, index) => (
+                  <li key={index} className={styles.benefitChip}>
+                    <Icon name="check" size={14} className={styles.checkIcon} />
+                    {benefit}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
         </div>
 
         <div className={styles.footer}>
@@ -124,14 +141,16 @@ export function JobModal({ job, onClose, onApply }: JobModalProps) {
             rel="noopener noreferrer"
             className={styles.btnWhatsapp}
           >
-            <span>💬 Candidatar via WhatsApp</span>
+            <Icon name="messageCircle" size={18} />
+            <span>Candidatar via WhatsApp</span>
           </a>
           <button
             type="button"
             className={styles.btnForm}
             onClick={() => onApply(job)}
           >
-            <span>📋 Preencher Formulário</span>
+            <Icon name="fileText" size={18} />
+            <span>Preencher Formulário</span>
           </button>
         </div>
       </div>
