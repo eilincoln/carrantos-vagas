@@ -1,5 +1,6 @@
 import styles from "./Footer.module.css";
 import logoImg from "../../assets/logo.png";
+import { Icon } from "../Icon/Icon";
 
 export function Footer() {
   return (
@@ -82,7 +83,7 @@ export function Footer() {
         </div>
         <div style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
           <a href="/admin" className={styles.adminLink}>
-            Área do RH 🔒
+            Área do RH <Icon name="lock" size={12} />
           </a>
         </div>
       </div>
