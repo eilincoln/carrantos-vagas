@@ -1,13 +1,12 @@
 import styles from "./Footer.module.css";
+import logoImg from "../../assets/logo.png";
 
 export function Footer() {
   return (
     <footer className={styles.footer}>
       <div className={styles.container}>
         <div className={styles.brandCol}>
-          <div className={styles.logo}>
-            GRUPO <span className={styles.logoSpan}>CARRANTOS</span>
-          </div>
+          <img src={logoImg} alt="Grupo Carrantos" className={styles.logo} />
           <p className={styles.description}>
             Excelência e compromisso em soluções terceirizadas de Facilities,
             Segurança Patrimonial, Controle de Acesso e Gestão Operacional.
