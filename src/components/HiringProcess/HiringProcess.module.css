@@ -1,0 +1,158 @@
+.section {
+  padding: 1rem 0 4rem;
+}
+
+.header {
+  text-align: center;
+  max-width: 620px;
+  margin: 0 auto 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.eyebrow {
+  color: var(--color-secondary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  font-weight: 800;
+  color: var(--color-primary);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+/* Mobile: linha do tempo vertical */
+.steps {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.step {
+  position: relative;
+  display: flex;
+  gap: 1rem;
+  padding-bottom: 1.75rem;
+}
+
+.step:last-child {
+  padding-bottom: 0;
+}
+
+/* Linha conectando as etapas */
+.step:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 25px;
+  top: 52px;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    var(--color-border-strong),
+    var(--color-border)
+  );
+}
+
+.stepMarker {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.stepIcon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+  color: var(--color-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepNumber {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--color-background);
+}
+
+.stepContent {
+  padding-top: 0.35rem;
+}
+
+.stepTitle {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 0.25rem;
+}
+
+.stepDescription {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+}
+
+/* Desktop: linha do tempo horizontal */
+@media (min-width: 900px) {
+  .steps {
+    flex-direction: row;
+    gap: 1.5rem;
+  }
+
+  .step {
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding-bottom: 0;
+  }
+
+  .step:not(:last-child)::before {
+    left: calc(50% + 34px);
+    right: calc(-50% - 1.5rem + 34px);
+    top: 25px;
+    bottom: auto;
+    width: auto;
+    height: 2px;
+    background: linear-gradient(
+      to right,
+      var(--color-border-strong),
+      var(--color-border)
+    );
+  }
+
+  .stepContent {
+    padding-top: 0;
+  }
+}

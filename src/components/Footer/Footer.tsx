@@ -37,6 +37,16 @@ export function Footer() {
                 Processo Seletivo
               </a>
             </li>
+            <li>
+              <a
+                href="https://carrantos.com.br"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.link}
+              >
+                Site Institucional ↗
+              </a>
+            </li>
           </ul>
         </div>
 
