@@ -8,9 +8,14 @@ import { JobSkeleton } from "../../components/JobSkeleton/JobSkeleton";
 import { JobModal } from "../../components/JobModal/JobModal";
 import { ApplicationModal } from "../../components/ApplicationModal/ApplicationModal";
 import { TalentBank } from "../../components/TalentBank/TalentBank";
+import { HiringProcess } from "../../components/HiringProcess/HiringProcess";
+import { Benefits } from "../../components/Benefits/Benefits";
+import { Faq } from "../../components/Faq/Faq";
 import { CompanyCulture } from "../../components/CompanyCulture/CompanyCulture";
 import { Footer } from "../../components/Footer/Footer";
+import { Icon } from "../../components/Icon/Icon";
 import type { Job } from "../../types/job";
+import styles from "./HomePage.module.css";
 
 export function HomePage() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -81,13 +86,7 @@ export function HomePage() {
       <Header />
       <Hero />
 
-      <main
-        style={{
-          maxWidth: "1200px",
-          margin: "2.5rem auto",
-          padding: "0 1.5rem",
-        }}
-      >
+      <main className={styles.main}>
         <JobFilters
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
@@ -97,65 +96,54 @@ export function HomePage() {
           onCategoryChange={setSelectedCategory}
         />
 
-        <div style={{ marginBottom: "1.5rem" }}>
-          <p style={{ color: "var(--color-text-muted)", fontSize: "0.95rem" }}>
-            Vagas encontradas:{" "}
-            <strong>{isLoading ? "..." : filteredJobs.length}</strong>
-          </p>
-        </div>
-
-        {isLoading ? (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-              gap: "1.5rem",
-            }}
-          >
-            <JobSkeleton />
-            <JobSkeleton />
-            <JobSkeleton />
-          </div>
-        ) : filteredJobs.length === 0 ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "4rem 1.5rem",
-              background: "var(--color-surface)",
-              borderRadius: "var(--radius-lg)",
-              border: "1px solid var(--color-border)",
-            }}
-          >
-            <h3
-              style={{ color: "var(--color-primary)", marginBottom: "0.5rem" }}
-            >
-              Nenhuma vaga aberta com estes filtros
-            </h3>
-            <p style={{ color: "var(--color-text-muted)" }}>
-              Experimente limpar os seletores ou cadastre seu currículo no nosso
-              Banco de Talentos logo abaixo.
+        <section id="vagas" aria-labelledby="jobs-title">
+          <div className={styles.sectionHeader}>
+            <h2 id="jobs-title" className={styles.sectionTitle}>
+              Vagas abertas
+            </h2>
+            <p className={styles.resultsCount}>
+              Vagas encontradas:{" "}
+              <strong>{isLoading ? "..." : filteredJobs.length}</strong>
             </p>
           </div>
-        ) : (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-              gap: "1.5rem",
-            }}
-          >
-            {filteredJobs.map((job) => (
-              <JobCard
-                key={job.id}
-                job={job}
-                onSelectJob={(job) => setSelectedJob(job)}
-              />
-            ))}
-          </div>
-        )}
+
+          {isLoading ? (
+            <div className={styles.jobsGrid}>
+              <JobSkeleton />
+              <JobSkeleton />
+              <JobSkeleton />
+            </div>
+          ) : filteredJobs.length === 0 ? (
+            <div className={styles.emptyState}>
+              <span className={styles.emptyIcon}>
+                <Icon name="search" size={28} />
+              </span>
+              <h3 className={styles.emptyTitle}>
+                Nenhuma vaga aberta com estes filtros
+              </h3>
+              <p className={styles.emptyText}>
+                Experimente limpar os seletores ou cadastre seu currículo no
+                nosso Banco de Talentos logo abaixo.
+              </p>
+            </div>
+          ) : (
+            <div className={styles.jobsGrid}>
+              {filteredJobs.map((job) => (
+                <JobCard
+                  key={job.id}
+                  job={job}
+                  onSelectJob={(job) => setSelectedJob(job)}
+                />
+              ))}
+            </div>
+          )}
+        </section>
 
         <TalentBank onOpenApplication={() => handleOpenApplication(null)} />
+        <HiringProcess />
+        <Benefits />
         <CompanyCulture />
+        <Faq />
       </main>
 
       <Footer />

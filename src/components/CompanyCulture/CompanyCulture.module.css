@@ -1,24 +1,39 @@
 .section {
-  padding: 3.5rem 0;
-  border-top: 1px solid var(--color-border);
+  padding: 1rem 0 2rem;
 }
 
 .header {
   text-align: center;
-  max-width: 600px;
+  max-width: 620px;
   margin: 0 auto 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.eyebrow {
+  color: var(--color-secondary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .title {
-  font-size: 1.75rem;
+  font-family: var(--font-heading);
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
   font-weight: 800;
   color: var(--color-primary);
-  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  text-wrap: balance;
 }
 
 .subtitle {
   font-size: 1rem;
   color: var(--color-text-muted);
+  line-height: 1.6;
 }
 
 .grid {
@@ -37,26 +52,42 @@
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 2rem 1.5rem;
+  padding: 2rem 1.75rem;
+  box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
 }
 
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--color-border-strong);
 }
 
 .icon {
-  font-size: 2rem;
-  line-height: 1;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-secondary) 100%
+  );
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 8px 16px -6px rgba(0, 86, 179, 0.45);
 }
 
 .cardTitle {
+  font-family: var(--font-heading);
   font-size: 1.15rem;
   font-weight: 700;
   color: var(--color-primary);
@@ -65,5 +96,5 @@
 .cardDescription {
   font-size: 0.9rem;
   color: var(--color-text-muted);
-  line-height: 1.5;
+  line-height: 1.6;
 }

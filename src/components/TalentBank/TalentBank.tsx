@@ -1,4 +1,6 @@
 import styles from "./TalentBank.module.css";
+import { siteImages } from "../../config/images";
+import { Icon } from "../Icon/Icon";
 
 interface TalentBankProps {
   onOpenApplication: () => void;
@@ -6,8 +8,12 @@ interface TalentBankProps {
 
 export function TalentBank({ onOpenApplication }: TalentBankProps) {
   return (
-    <section className={styles.section} aria-labelledby="talent-bank-title">
-      <div className={styles.container}>
+    <section
+      id="banco-talentos"
+      className={styles.section}
+      aria-labelledby="talent-bank-title"
+    >
+      <div className={styles.content}>
         <span className={styles.badge}>Oportunidades Futuras</span>
         <h2 id="talent-bank-title" className={styles.title}>
           Não encontrou a vaga ideal para o seu perfil?
@@ -23,8 +29,30 @@ export function TalentBank({ onOpenApplication }: TalentBankProps) {
           className={styles.actionButton}
           onClick={onOpenApplication}
         >
-          <span>Cadastrar no Banco de Talentos ↗</span>
+          <Icon name="fileText" size={18} />
+          <span>Cadastrar no Banco de Talentos</span>
         </button>
+      </div>
+
+      <div className={styles.visual} aria-hidden="true">
+        {siteImages.talentBank ? (
+          <img src={siteImages.talentBank} alt="" className={styles.image} />
+        ) : (
+          // Visual provisório até a foto institucional ser adicionada
+          <div className={styles.placeholder}>
+            <div className={styles.placeholderRing}>
+              <div className={styles.placeholderIcon}>
+                <Icon name="briefcase" size={40} />
+              </div>
+            </div>
+            <div className={`${styles.floatingChip} ${styles.chipTop}`}>
+              <Icon name="shield" size={14} /> Segurança
+            </div>
+            <div className={`${styles.floatingChip} ${styles.chipBottom}`}>
+              <Icon name="users" size={14} /> Facilities
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );

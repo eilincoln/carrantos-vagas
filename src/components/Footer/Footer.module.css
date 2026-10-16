@@ -20,15 +20,13 @@
   gap: 1rem;
 }
 
+/* Logo original é preto; o filtro o deixa branco para o fundo escuro */
 .logo {
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: #ffffff;
-  letter-spacing: -0.5px;
-}
-
-.logoSpan {
-  color: var(--color-secondary);
+  display: block;
+  height: 40px;
+  width: auto;
+  align-self: flex-start;
+  filter: brightness(0) invert(1);
 }
 
 .description {
@@ -89,7 +87,22 @@
   font-size: 0.85rem;
 }
 
+.privacyText {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #94a3b8;
+}
+
+.bottomLinks {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
 .adminLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   color: #64748b;
   text-decoration: none;
   font-size: 0.8rem;

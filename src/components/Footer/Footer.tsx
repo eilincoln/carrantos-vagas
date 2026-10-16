@@ -1,13 +1,13 @@
 import styles from "./Footer.module.css";
+import logoImg from "../../assets/logo.png";
+import { Icon } from "../Icon/Icon";
 
 export function Footer() {
   return (
     <footer className={styles.footer}>
       <div className={styles.container}>
         <div className={styles.brandCol}>
-          <div className={styles.logo}>
-            GRUPO <span className={styles.logoSpan}>CARRANTOS</span>
-          </div>
+          <img src={logoImg} alt="Grupo Carrantos" className={styles.logo} />
           <p className={styles.description}>
             Excelência e compromisso em soluções terceirizadas de Facilities,
             Segurança Patrimonial, Controle de Acesso e Gestão Operacional.
@@ -37,6 +37,21 @@ export function Footer() {
                 Processo Seletivo
               </a>
             </li>
+            <li>
+              <a href="#faq" className={styles.link}>
+                Perguntas Frequentes
+              </a>
+            </li>
+            <li>
+              <a
+                href="https://carrantos.com.br"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.link}
+              >
+                Site Institucional ↗
+              </a>
+            </li>
           </ul>
         </div>
 
@@ -53,7 +68,7 @@ export function Footer() {
 
         <div>
           <h4 className={styles.colTitle}>Privacidade & LGPD</h4>
-          <p style={{ fontSize: "0.85rem", lineHeight: 1.5, color: "#94a3b8" }}>
+          <p className={styles.privacyText}>
             Seus dados cadastrais e currículos são tratados estritamente para
             finalidades de recrutamento e seleção interna, com armazenamento
             seguro em nuvem.
@@ -66,9 +81,9 @@ export function Footer() {
           © {new Date().getFullYear()} Grupo Carrantos. Todos os direitos
           reservados.
         </div>
-        <div style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
+        <div className={styles.bottomLinks}>
           <a href="/admin" className={styles.adminLink}>
-            Área do RH 🔒
+            Área do RH <Icon name="lock" size={12} />
           </a>
         </div>
       </div>

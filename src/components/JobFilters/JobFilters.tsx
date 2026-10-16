@@ -1,5 +1,6 @@
 import type { JobCategory, JobLocation } from "../../types/job";
 import styles from "./JobFilters.module.css";
+import { Icon } from "../Icon/Icon";
 
 interface JobFiltersProps {
   searchTerm: string;
@@ -40,14 +41,17 @@ export function JobFilters({
         <label htmlFor="search-input" className={styles.label}>
           Buscar por cargo
         </label>
-        <input
-          id="search-input"
-          type="text"
-          placeholder="Ex: Vigia, Serviços Gerais..."
-          className={styles.input}
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-        />
+        <div className={styles.inputWrapper}>
+          <Icon name="search" size={18} className={styles.inputIcon} />
+          <input
+            id="search-input"
+            type="text"
+            placeholder="Ex: Vigia, Serviços Gerais..."
+            className={`${styles.input} ${styles.inputWithIcon}`}
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+          />
+        </div>
       </div>
 
       {/* Select de Cidade / Unidade */}

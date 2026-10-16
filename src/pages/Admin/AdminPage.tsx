@@ -5,6 +5,8 @@ import { NewJobModal } from "./NewJobModal";
 import { EditJobModal } from "./EditJobModal";
 import type { Job } from "../../types/job";
 import styles from "./Admin.module.css";
+import { Icon } from "../../components/Icon/Icon";
+import logoImg from "../../assets/logo.png";
 
 type CandidateStatus =
   | "novo"
@@ -25,15 +27,13 @@ interface ApplicationRecord {
   status?: CandidateStatus;
 }
 
-const statusConfig: Record<
-  CandidateStatus,
-  { label: string; bg: string; color: string }
-> = {
-  novo: { label: "Novo", bg: "#e0f2fe", color: "#0369a1" },
-  triagem: { label: "Em Triagem", bg: "#fef3c7", color: "#b45309" },
-  entrevista: { label: "Entrevista", bg: "#f3e8ff", color: "#6b21a8" },
-  aprovado: { label: "Aprovado", bg: "#dcfce7", color: "#15803d" },
-  reprovado: { label: "Reprovado", bg: "#fee2e2", color: "#b91c1c" },
+// As cores de cada status ficam no Admin.module.css (atributo data-status)
+const statusConfig: Record<CandidateStatus, { label: string }> = {
+  novo: { label: "Novo" },
+  triagem: { label: "Em Triagem" },
+  entrevista: { label: "Entrevista" },
+  aprovado: { label: "Aprovado" },
+  reprovado: { label: "Reprovado" },
 };
 
 export function AdminPage() {
@@ -59,28 +59,6 @@ export function AdminPage() {
     "all" | "active" | "paused"
   >("all");
   const [jobLocationFilter, setJobLocationFilter] = useState("");
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) {
-        fetchApplications();
-        fetchJobs();
-      }
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) {
-        fetchApplications();
-        fetchJobs();
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   const fetchApplications = async () => {
     setIsLoading(true);
@@ -119,6 +97,28 @@ export function AdminPage() {
     }
   };
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session) {
+        fetchApplications();
+        fetchJobs();
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session) {
+        fetchApplications();
+        fetchJobs();
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const handleUpdateStatus = async (
     appId: string,
     newStatus: CandidateStatus,
@@ -156,6 +156,8 @@ export function AdminPage() {
       toast.success(
         nextStatus ? "Vaga ativada no site!" : "Vaga pausada com sucesso.",
       );
+    } else {
+      toast.error("Erro ao atualizar o status da vaga.");
     }
   };
 
@@ -285,15 +287,31 @@ export function AdminPage() {
 
   const handleExportCSV = () => {
     if (filteredApplications.length === 0) return;
+    // Escapa aspas e impede que valores iniciados por = + - @ virem fórmulas no Excel
+    const csvCell = (value: string) => {
+      const safe = /^[=+\-@]/.test(value) ? `'${value}` : value;
+      return `"${safe.replace(/"/g, '""')}"`;
+    };
+
     const headers = "Data,Status,Vaga,Nome,Email,Telefone,Cidade\n";
     const rows = filteredApplications
-      .map(
-        (a) =>
-          `"${new Date(a.created_at).toLocaleDateString("pt-BR")}","${a.status || "novo"}","${a.job_title}","${a.full_name}","${a.email}","${a.phone}","${a.city}"`,
+      .map((a) =>
+        [
+          new Date(a.created_at).toLocaleDateString("pt-BR"),
+          a.status || "novo",
+          a.job_title,
+          a.full_name,
+          a.email,
+          a.phone,
+          a.city,
+        ]
+          .map((value) => csvCell(String(value ?? "")))
+          .join(","),
       )
       .join("\n");
 
-    const blob = new Blob([headers + rows], {
+    // O BOM (\uFEFF) faz o Excel reconhecer o UTF-8 e exibir os acentos corretamente
+    const blob = new Blob(["\uFEFF" + headers + rows], {
       type: "text/csv;charset=utf-8;",
     });
     const url = URL.createObjectURL(blob);
@@ -311,18 +329,27 @@ export function AdminPage() {
 
   if (!session) {
     return (
-      <div className={styles.container}>
+      <div className={styles.loginPage}>
         <Toaster position="top-center" richColors />
         <div className={styles.loginWrapper}>
-          <h1 className={styles.loginTitle}>Acesso Restrito RH</h1>
-          <p className={styles.loginSubtitle}>Painel de Gestão Carrantos</p>
+          <div className={styles.loginHeader}>
+            <img src={logoImg} alt="Grupo Carrantos" className={styles.loginLogo} />
+            <span className={styles.loginBadge}>
+              <Icon name="lock" size={12} /> Acesso Restrito RH
+            </span>
+            <p className={styles.loginSubtitle}>Painel de Gestão Carrantos</p>
+          </div>
 
           <form onSubmit={handleLogin} className={styles.form}>
             <div className={styles.inputGroup}>
-              <label className={styles.label}>E-mail Corporativo</label>
+              <label htmlFor="login-email" className={styles.label}>
+                E-mail Corporativo
+              </label>
               <input
+                id="login-email"
                 type="email"
                 required
+                autoComplete="email"
                 className={styles.input}
                 placeholder="rh@carrantos.com.br"
                 value={email}
@@ -330,10 +357,14 @@ export function AdminPage() {
               />
             </div>
             <div className={styles.inputGroup}>
-              <label className={styles.label}>Senha</label>
+              <label htmlFor="login-password" className={styles.label}>
+                Senha
+              </label>
               <input
+                id="login-password"
                 type="password"
                 required
+                autoComplete="current-password"
                 className={styles.input}
                 placeholder="••••••••"
                 value={password}
@@ -348,6 +379,10 @@ export function AdminPage() {
               {isLoading ? "Autenticando..." : "Entrar no Painel"}
             </button>
           </form>
+
+          <a href="/" className={styles.loginBackLink}>
+            <Icon name="arrowLeft" size={14} /> Voltar ao portal de vagas
+          </a>
         </div>
       </div>
     );
@@ -360,252 +395,135 @@ export function AdminPage() {
     <div className={styles.container}>
       <Toaster position="top-right" richColors />
 
+      <div className={styles.topBar}>
+        <div className={styles.topBarInner}>
+          <div className={styles.topBarBrand}>
+            <img src={logoImg} alt="Grupo Carrantos" className={styles.topBarLogo} />
+            <span className={styles.topBarBadge}>Painel RH</span>
+          </div>
+          <div className={styles.topBarActions}>
+            <a
+              href="/"
+              className={styles.portalLink}
+              aria-label="Ver Portal Público"
+              title="Ver Portal Público"
+            >
+              <Icon name="arrowUpRight" size={14} />
+              <span>Ver Portal Público</span>
+            </a>
+            <button onClick={handleLogout} className={styles.logoutBtn}>
+              <Icon name="logOut" size={16} />
+              <span>Sair</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <header className={styles.dashboardHeader}>
-        <div>
-          <span
-            style={{
-              fontSize: "0.8rem",
-              color: "var(--color-secondary)",
-              fontWeight: 700,
-            }}
-          >
-            PAINEL ADMINISTRATIVO • GRUPO CARRANTOS
-          </span>
-          <h1 className={styles.dashTitle}>
-            {activeTab === "applications"
-              ? "Candidaturas Recebidas"
-              : "Gestão de Vagas"}
-          </h1>
-        </div>
-        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-          <a
-            href="/"
-            style={{
-              color: "var(--color-primary)",
-              textDecoration: "none",
-              fontWeight: 600,
-              fontSize: "0.9rem",
-            }}
-          >
-            ← Ver Portal Público
-          </a>
-          <button onClick={handleLogout} className={styles.logoutBtn}>
-            Sair
-          </button>
-        </div>
+        <span className={styles.eyebrow}>
+          Painel Administrativo • Grupo Carrantos
+        </span>
+        <h1 className={styles.dashTitle}>
+          {activeTab === "applications"
+            ? "Candidaturas Recebidas"
+            : "Gestão de Vagas"}
+        </h1>
       </header>
 
       {/* KPIs */}
-      <div
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto 2rem",
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: "1rem",
-        }}
-      >
-        <div
-          style={{
-            background: "var(--color-surface)",
-            padding: "1.25rem",
-            borderRadius: "var(--radius-md)",
-            border: "1px solid var(--color-border)",
-          }}
-        >
-          <span
-            style={{
-              fontSize: "0.85rem",
-              color: "var(--color-text-muted)",
-              fontWeight: 600,
-            }}
-          >
-            Total de Candidatos
+      <div className={styles.kpiGrid}>
+        <div className={styles.kpiCard}>
+          <span className={`${styles.kpiIcon} ${styles.kpiIconPrimary}`}>
+            <Icon name="users" size={22} />
           </span>
-          <div
-            style={{
-              fontSize: "1.75rem",
-              fontWeight: 800,
-              color: "var(--color-primary)",
-              marginTop: "0.25rem",
-            }}
-          >
-            {applications.length}
+          <div>
+            <span className={styles.kpiLabel}>Total de Candidatos</span>
+            <div className={styles.kpiValue}>{applications.length}</div>
           </div>
         </div>
-        <div
-          style={{
-            background: "var(--color-surface)",
-            padding: "1.25rem",
-            borderRadius: "var(--radius-md)",
-            border: "1px solid var(--color-border)",
-          }}
-        >
-          <span
-            style={{
-              fontSize: "0.85rem",
-              color: "var(--color-text-muted)",
-              fontWeight: 600,
-            }}
-          >
-            Vagas Ativas no Site
+        <div className={styles.kpiCard}>
+          <span className={`${styles.kpiIcon} ${styles.kpiIconSuccess}`}>
+            <Icon name="checkCircle" size={22} />
           </span>
-          <div
-            style={{
-              fontSize: "1.75rem",
-              fontWeight: 800,
-              color: "#16a34a",
-              marginTop: "0.25rem",
-            }}
-          >
-            {activeJobsCount}
+          <div>
+            <span className={styles.kpiLabel}>Vagas Ativas no Site</span>
+            <div className={`${styles.kpiValue} ${styles.kpiValueSuccess}`}>
+              {activeJobsCount}
+            </div>
           </div>
         </div>
-        <div
-          style={{
-            background: "var(--color-surface)",
-            padding: "1.25rem",
-            borderRadius: "var(--radius-md)",
-            border: "1px solid var(--color-border)",
-          }}
-        >
-          <span
-            style={{
-              fontSize: "0.85rem",
-              color: "var(--color-text-muted)",
-              fontWeight: 600,
-            }}
-          >
-            Vagas Pausadas
+        <div className={styles.kpiCard}>
+          <span className={`${styles.kpiIcon} ${styles.kpiIconWarning}`}>
+            <Icon name="pause" size={20} />
           </span>
-          <div
-            style={{
-              fontSize: "1.75rem",
-              fontWeight: 800,
-              color: "#d97706",
-              marginTop: "0.25rem",
-            }}
-          >
-            {pausedJobsCount}
+          <div>
+            <span className={styles.kpiLabel}>Vagas Pausadas</span>
+            <div className={`${styles.kpiValue} ${styles.kpiValueWarning}`}>
+              {pausedJobsCount}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Abas e Ações */}
-      <div
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto 1.5rem",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "1rem",
-        }}
-      >
-        <div style={{ display: "flex", gap: "0.5rem" }}>
+      <div className={styles.toolbar}>
+        <div className={styles.tabs} role="tablist">
           <button
+            role="tab"
+            aria-selected={activeTab === "applications"}
             onClick={() => setActiveTab("applications")}
-            style={{
-              padding: "0.6rem 1.2rem",
-              borderRadius: "var(--radius-md)",
-              fontWeight: 600,
-              fontSize: "0.9rem",
-              cursor: "pointer",
-              border: "1px solid var(--color-border)",
-              backgroundColor:
-                activeTab === "applications"
-                  ? "var(--color-primary)"
-                  : "var(--color-surface)",
-              color:
-                activeTab === "applications"
-                  ? "#ffffff"
-                  : "var(--color-text-main)",
-            }}
+            className={`${styles.tab} ${activeTab === "applications" ? styles.tabActive : ""}`}
           >
-            📋 Candidaturas ({applications.length})
+            <Icon name="fileText" size={16} />
+            Candidaturas
+            <span className={styles.tabCount}>{applications.length}</span>
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === "jobs"}
             onClick={() => setActiveTab("jobs")}
-            style={{
-              padding: "0.6rem 1.2rem",
-              borderRadius: "var(--radius-md)",
-              fontWeight: 600,
-              fontSize: "0.9rem",
-              cursor: "pointer",
-              border: "1px solid var(--color-border)",
-              backgroundColor:
-                activeTab === "jobs"
-                  ? "var(--color-primary)"
-                  : "var(--color-surface)",
-              color:
-                activeTab === "jobs" ? "#ffffff" : "var(--color-text-main)",
-            }}
+            className={`${styles.tab} ${activeTab === "jobs" ? styles.tabActive : ""}`}
           >
-            💼 Vagas ({jobs.length})
+            <Icon name="briefcase" size={16} />
+            Vagas
+            <span className={styles.tabCount}>{jobs.length}</span>
           </button>
         </div>
 
         {activeTab === "applications" ? (
-          <button
-            onClick={handleExportCSV}
-            style={{
-              backgroundColor: "var(--color-surface)",
-              color: "var(--color-primary)",
-              border: "1px solid var(--color-border)",
-              padding: "0.6rem 1.2rem",
-              borderRadius: "var(--radius-md)",
-              fontWeight: 600,
-              fontSize: "0.9rem",
-              cursor: "pointer",
-            }}
-          >
-            📥 Exportar CSV
+          <button onClick={handleExportCSV} className={styles.secondaryBtn}>
+            <Icon name="download" size={16} />
+            Exportar CSV
           </button>
         ) : (
           <button
             onClick={() => setIsNewJobOpen(true)}
-            style={{
-              backgroundColor: "#16a34a",
-              color: "#ffffff",
-              padding: "0.6rem 1.2rem",
-              borderRadius: "var(--radius-md)",
-              fontWeight: 600,
-              fontSize: "0.9rem",
-              border: "none",
-              cursor: "pointer",
-            }}
+            className={styles.primaryBtn}
           >
-            ➕ Nova Vaga
+            <Icon name="plus" size={16} />
+            Nova Vaga
           </button>
         )}
       </div>
 
       {/* Barra de Filtros */}
-      <div
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto 1.5rem",
-          background: "var(--color-surface)",
-          padding: "1rem",
-          borderRadius: "var(--radius-md)",
-          border: "1px solid var(--color-border)",
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-          gap: "0.75rem",
-        }}
-      >
+      <div className={styles.filterBar}>
         {activeTab === "applications" ? (
           <>
-            <input
-              type="text"
-              placeholder="Buscar por candidato, e-mail..."
-              className={styles.input}
-              value={appSearch}
-              onChange={(e) => setAppSearch(e.target.value)}
-            />
+            <div className={styles.searchWrapper}>
+              <Icon name="search" size={16} className={styles.searchIcon} />
+              <input
+                type="text"
+                placeholder="Buscar por candidato, e-mail..."
+                aria-label="Buscar candidaturas"
+                className={`${styles.input} ${styles.searchInput}`}
+                value={appSearch}
+                onChange={(e) => setAppSearch(e.target.value)}
+              />
+            </div>
             <select
-              className={styles.input}
+              aria-label="Filtrar por vaga"
+              className={`${styles.input} ${styles.select}`}
               value={appJobFilter}
               onChange={(e) => setAppJobFilter(e.target.value)}
             >
@@ -617,7 +535,8 @@ export function AdminPage() {
               ))}
             </select>
             <select
-              className={styles.input}
+              aria-label="Filtrar por status"
+              className={`${styles.input} ${styles.select}`}
               value={appStatusFilter}
               onChange={(e) => setAppStatusFilter(e.target.value)}
             >
@@ -632,7 +551,8 @@ export function AdminPage() {
         ) : (
           <>
             <select
-              className={styles.input}
+              aria-label="Filtrar por status da vaga"
+              className={`${styles.input} ${styles.select}`}
               value={jobStatusFilter}
               onChange={(e) => setJobStatusFilter(e.target.value as any)}
             >
@@ -641,7 +561,8 @@ export function AdminPage() {
               <option value="paused">Apenas Pausadas</option>
             </select>
             <select
-              className={styles.input}
+              aria-label="Filtrar por unidade"
+              className={`${styles.input} ${styles.select}`}
               value={jobLocationFilter}
               onChange={(e) => setJobLocationFilter(e.target.value)}
             >
@@ -661,25 +582,12 @@ export function AdminPage() {
           {activeTab === "applications" ? (
             /* TABELA DE CANDIDATURAS COM STATUS E WHATSAPP */
             isLoading ? (
-              <p
-                style={{
-                  padding: "2rem",
-                  textAlign: "center",
-                  color: "var(--color-text-muted)",
-                }}
-              >
-                Carregando candidaturas...
-              </p>
+              <p className={styles.emptyState}>Carregando candidaturas...</p>
             ) : filteredApplications.length === 0 ? (
-              <p
-                style={{
-                  padding: "2rem",
-                  textAlign: "center",
-                  color: "var(--color-text-muted)",
-                }}
-              >
-                Nenhuma candidatura encontrada.
-              </p>
+              <div className={styles.emptyState}>
+                <Icon name="inbox" size={28} />
+                <p>Nenhuma candidatura encontrada.</p>
+              </div>
             ) : (
               <table className={styles.table}>
                 <thead>
@@ -689,17 +597,16 @@ export function AdminPage() {
                     <th className={styles.th}>Vaga</th>
                     <th className={styles.th}>Candidato / Cidade</th>
                     <th className={styles.th}>Contato</th>
-                    <th className={styles.th} style={{ textAlign: "right" }}>Ações</th>
+                    <th className={`${styles.th} ${styles.thRight}`}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredApplications.map((app) => {
                     const currentStatus = (app.status || "novo") as CandidateStatus;
-                    const statusInfo = statusConfig[currentStatus] || statusConfig.novo;
 
                     return (
-                      <tr key={app.id}>
-                        <td className={styles.td}>
+                      <tr key={app.id} className={styles.tr}>
+                        <td className={`${styles.td} ${styles.dateCell}`}>
                           {new Date(app.created_at).toLocaleDateString("pt-BR", {
                             day: "2-digit",
                             month: "2-digit",
@@ -715,17 +622,9 @@ export function AdminPage() {
                                 e.target.value as CandidateStatus
                               )
                             }
-                            style={{
-                              backgroundColor: statusInfo.bg,
-                              color: statusInfo.color,
-                              border: "none",
-                              padding: "0.3rem 0.6rem",
-                              borderRadius: "999px",
-                              fontSize: "0.75rem",
-                              fontWeight: 700,
-                              cursor: "pointer",
-                              outline: "none",
-                            }}
+                            aria-label={`Status de ${app.full_name}`}
+                            data-status={currentStatus}
+                            className={styles.statusSelect}
                           >
                             <option value="novo">Novo</option>
                             <option value="triagem">Em Triagem</option>
@@ -738,53 +637,30 @@ export function AdminPage() {
                           <strong>{app.job_title}</strong>
                         </td>
                         <td className={`${styles.td} ${styles.candidateCell}`}>
-                          <div>{app.full_name}</div>
-                          <div
-                            style={{
-                              fontSize: "0.75rem",
-                              color: "var(--color-text-muted)",
-                            }}
-                          >
-                            {app.city}
-                          </div>
+                          <div className={styles.candidateName}>{app.full_name}</div>
+                          <div className={styles.mutedText}>{app.city}</div>
                         </td>
                         <td className={`${styles.td} ${styles.contactCell}`}>
-  <div style={{ whiteSpace: "nowrap" }}>{app.phone}</div>
-  <div className={styles.emailText}>
-    {app.email}
-  </div>
-</td>
+                          <div className={styles.phoneText}>{app.phone}</div>
+                          <div className={styles.emailText}>{app.email}</div>
+                        </td>
                         <td className={`${styles.td} ${styles.actionsCell}`}>
-                          <div
-                            style={{
-                              display: "flex",
-                              gap: "0.4rem",
-                              alignItems: "center",
-                              justifyContent: "flex-end",
-                            }}
-                          >
+                          <div className={styles.actions}>
                             <button
                               onClick={() => handleDownloadResume(app.resume_url)}
                               className={styles.downloadBtn}
                               title="Baixar Currículo"
                             >
-                              📄 PDF
+                              <Icon name="download" size={14} />
+                              PDF
                             </button>
                             <button
                               onClick={() => handleOpenWhatsApp(app)}
-                              style={{
-                                backgroundColor: "#25D366",
-                                color: "#fff",
-                                border: "none",
-                                padding: "0.4rem 0.6rem",
-                                borderRadius: "var(--radius-sm)",
-                                cursor: "pointer",
-                                fontSize: "0.8rem",
-                                fontWeight: 600,
-                              }}
+                              className={`${styles.iconBtn} ${styles.iconBtnWhatsapp}`}
                               title="Chamar no WhatsApp"
+                              aria-label={`Chamar ${app.full_name} no WhatsApp`}
                             >
-                              💬
+                              <Icon name="messageCircle" size={16} />
                             </button>
                             <button
                               onClick={() =>
@@ -794,19 +670,11 @@ export function AdminPage() {
                                   app.resume_url
                                 )
                               }
-                              style={{
-                                background: "#fee2e2",
-                                color: "#b91c1c",
-                                border: "none",
-                                padding: "0.4rem 0.6rem",
-                                borderRadius: "var(--radius-sm)",
-                                cursor: "pointer",
-                                fontSize: "0.8rem",
-                                fontWeight: 600,
-                              }}
+                              className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
                               title="Excluir"
+                              aria-label={`Excluir candidatura de ${app.full_name}`}
                             >
-                              🗑️
+                              <Icon name="trash" size={16} />
                             </button>
                           </div>
                         </td>
@@ -819,15 +687,15 @@ export function AdminPage() {
           ) : (
             /* TABELA DE GESTÃO DE VAGAS */
             jobs.length === 0 ? (
-              <p
-                style={{
-                  padding: "2rem",
-                  textAlign: "center",
-                  color: "var(--color-text-muted)",
-                }}
-              >
-                Nenhuma vaga cadastrada.
-              </p>
+              <div className={styles.emptyState}>
+                <Icon name="briefcase" size={28} />
+                <p>Nenhuma vaga cadastrada.</p>
+              </div>
+            ) : filteredJobs.length === 0 ? (
+              <div className={styles.emptyState}>
+                <Icon name="search" size={28} />
+                <p>Nenhuma vaga encontrada com estes filtros.</p>
+              </div>
             ) : (
               <table className={styles.table}>
                 <thead>
@@ -836,12 +704,12 @@ export function AdminPage() {
                     <th className={styles.th}>Setor</th>
                     <th className={styles.th}>Unidade</th>
                     <th className={styles.th}>Status</th>
-                    <th className={styles.th} style={{ textAlign: "right" }}>Ações</th>
+                    <th className={`${styles.th} ${styles.thRight}`}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredJobs.map((job) => (
-                    <tr key={job.id}>
+                    <tr key={job.id} className={styles.tr}>
                       <td className={`${styles.td} ${styles.jobTitleCell}`}>
                         <strong>{job.title}</strong>
                       </td>
@@ -850,51 +718,30 @@ export function AdminPage() {
                       <td className={styles.td}>
                         <button
                           onClick={() => handleToggleJobStatus(job.id, job.isActive)}
-                          style={{
-                            backgroundColor: job.isActive ? "#dcfce7" : "#fef3c7",
-                            color: job.isActive ? "#15803d" : "#b45309",
-                            border: "none",
-                            padding: "0.3rem 0.6rem",
-                            borderRadius: "999px",
-                            fontSize: "0.75rem",
-                            fontWeight: 700,
-                            cursor: "pointer",
-                          }}
+                          className={`${styles.jobStatusBtn} ${job.isActive ? styles.jobStatusActive : styles.jobStatusPaused}`}
+                          title={job.isActive ? "Clique para pausar" : "Clique para ativar"}
                         >
+                          <span className={styles.statusDot} />
                           {job.isActive ? "Ativa" : "Pausada"}
                         </button>
                       </td>
                       <td className={`${styles.td} ${styles.actionsCell}`}>
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "0.4rem",
-                            alignItems: "center",
-                            justifyContent: "flex-end",
-                          }}
-                        >
+                        <div className={styles.actions}>
                           <button
                             onClick={() => setEditingJob(job)}
-                            className={styles.downloadBtn}
+                            className={styles.editBtn}
                             title="Editar Vaga"
                           >
-                            ✏️ Editar
+                            <Icon name="pencil" size={14} />
+                            Editar
                           </button>
                           <button
                             onClick={() => handleDeleteJob(job.id, job.title)}
-                            style={{
-                              background: "#fee2e2",
-                              color: "#b91c1c",
-                              border: "none",
-                              padding: "0.4rem 0.6rem",
-                              borderRadius: "var(--radius-sm)",
-                              cursor: "pointer",
-                              fontSize: "0.8rem",
-                              fontWeight: 600,
-                            }}
+                            className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
                             title="Excluir Vaga"
+                            aria-label={`Excluir vaga ${job.title}`}
                           >
-                            🗑️
+                            <Icon name="trash" size={16} />
                           </button>
                         </div>
                       </td>

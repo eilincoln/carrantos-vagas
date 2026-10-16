@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { supabase } from "../../lib/supabase";
 import styles from "./Admin.module.css";
+import { Icon } from "../../components/Icon/Icon";
 
 interface NewJobModalProps {
   isOpen: boolean;
@@ -79,65 +80,26 @@ export function NewJobModal({
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        backgroundColor: "rgba(15, 23, 42, 0.7)",
-        backdropFilter: "blur(4px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1rem",
-        zIndex: 1200,
-      }}
-      onClick={onClose}
-    >
+    <div className={styles.modalOverlay} onClick={onClose}>
       <div
-        style={{
-          backgroundColor: "var(--color-surface)",
-          borderRadius: "var(--radius-lg)",
-          width: "100%",
-          maxWidth: "600px",
-          maxHeight: "90vh",
-          overflowY: "auto",
-          padding: "2rem",
-          boxShadow: "0 20px 25px -5px rgba(0,0,0,0.2)",
-        }}
+        className={styles.modal}
         onClick={(e) => e.stopPropagation()}
       >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "1.5rem",
-          }}
-        >
-          <h2
-            style={{
-              color: "var(--color-primary)",
-              fontSize: "1.3rem",
-              fontWeight: 800,
-            }}
-          >
+        <div className={styles.modalHeader}>
+          <h2 className={styles.modalTitle}>
             Cadastrar Nova Vaga
           </h2>
           <button
             type="button"
             onClick={onClose}
-            style={{
-              background: "none",
-              border: "none",
-              fontSize: "1.3rem",
-              cursor: "pointer",
-            }}
+            className={styles.modalClose}
+            aria-label="Fechar"
           >
-            ✕
+            <Icon name="close" size={20} />
           </button>
         </div>
 
-        {errorMsg && <p className={styles.errorText}>⚠️ {errorMsg}</p>}
+        {errorMsg && <p className={styles.errorText}>{errorMsg}</p>}
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.inputGroup}>
@@ -152,13 +114,7 @@ export function NewJobModal({
             />
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "1rem",
-            }}
-          >
+          <div className={styles.formRow}>
             <div className={styles.inputGroup}>
               <label className={styles.label}>Área de Atuação *</label>
               <select
@@ -189,13 +145,7 @@ export function NewJobModal({
             </div>
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "1rem",
-            }}
-          >
+          <div className={styles.formRow}>
             <div className={styles.inputGroup}>
               <label className={styles.label}>Salário Base (R$) *</label>
               <input
