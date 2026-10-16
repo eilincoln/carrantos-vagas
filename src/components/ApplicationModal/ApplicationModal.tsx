@@ -1,7 +1,8 @@
-import { useState, type FormEvent, type ChangeEvent } from "react";
+import { useEffect, useState, type FormEvent, type ChangeEvent } from "react";
 import { supabase } from "../../lib/supabase";
 import type { Job } from "../../types/job";
 import styles from "./ApplicationModal.module.css";
+import { Icon } from "../Icon/Icon";
 
 interface ApplicationModalProps {
   job: Job | null;
@@ -23,6 +24,27 @@ export function ApplicationModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
+
+  const handleModalClose = () => {
+    setIsSuccess(false);
+    setErrorMessage("");
+    setFullName("");
+    setEmail("");
+    setPhone("");
+    setCity("");
+    setResumeFile(null);
+    onClose();
+  };
+
+  // Fecha com a tecla Esc (mesmo comportamento do modal de vaga)
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleModalClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  });
 
   if (!isOpen) return null;
 
@@ -127,16 +149,10 @@ export function ApplicationModal({
     }
   };
 
-  const handleModalClose = () => {
-    setIsSuccess(false);
-    setErrorMessage("");
-    setFullName("");
-    setEmail("");
-    setPhone("");
-    setCity("");
-    setResumeFile(null);
-    onClose();
-  };
+  const formatFileSize = (bytes: number) =>
+    bytes < 1024 * 1024
+      ? `${Math.max(1, Math.round(bytes / 1024))} KB`
+      : `${(bytes / 1024 / 1024).toFixed(1).replace(".", ",")} MB`;
 
   return (
     <div
@@ -144,16 +160,20 @@ export function ApplicationModal({
       onClick={handleModalClose}
       role="dialog"
       aria-modal="true"
+      aria-labelledby="application-modal-title"
     >
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
-          <div>
+          <div className={styles.headerContent}>
             <span className={styles.jobBadge}>
+              <Icon name={job ? "briefcase" : "users"} size={13} />
               {job
                 ? `Vaga: ${job.title} (${job.location})`
                 : "Cadastro no Banco de Talentos"}
             </span>
-            <h2 className={styles.title}>Formulário de Candidatura</h2>
+            <h2 id="application-modal-title" className={styles.title}>
+              Formulário de Candidatura
+            </h2>
           </div>
           <button
             type="button"
@@ -161,34 +181,26 @@ export function ApplicationModal({
             onClick={handleModalClose}
             aria-label="Fechar"
           >
-            ✕
+            <Icon name="close" size={20} />
           </button>
         </div>
 
         {isSuccess ? (
-          <div style={{ padding: "2.5rem 1.5rem", textAlign: "center" }}>
-            <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>✅</div>
-            <h3
-              style={{ color: "var(--color-primary)", marginBottom: "0.5rem" }}
-            >
+          <div className={styles.success} role="status">
+            <span className={styles.successIcon}>
+              <Icon name="checkCircle" size={36} />
+            </span>
+            <h3 className={styles.successTitle}>
               Candidatura Enviada com Sucesso!
             </h3>
-            <p
-              style={{
-                color: "var(--color-text-muted)",
-                fontSize: "0.95rem",
-                lineHeight: 1.5,
-                marginBottom: "1.5rem",
-              }}
-            >
+            <p className={styles.successText}>
               Seus dados e currículo foram salvos com segurança em nosso banco
               de dados. O time de Recursos Humanos avaliará seu perfil.
             </p>
             <button
               type="button"
-              className={styles.submitButton}
+              className={`${styles.submitButton} ${styles.fullWidth}`}
               onClick={handleModalClose}
-              style={{ width: "100%" }}
             >
               Fechar
             </button>
@@ -196,7 +208,9 @@ export function ApplicationModal({
         ) : (
           <form className={styles.form} onSubmit={handleSubmit}>
             {errorMessage && (
-              <p className={styles.errorText}>⚠️ {errorMessage}</p>
+              <p className={styles.errorText} role="alert">
+                {errorMessage}
+              </p>
             )}
 
             <div className={styles.inputGroup}>
@@ -207,6 +221,7 @@ export function ApplicationModal({
                 id="fullname"
                 type="text"
                 required
+                autoComplete="name"
                 disabled={isSubmitting}
                 className={styles.input}
                 placeholder="Ex: Carlos Silva"
@@ -215,36 +230,40 @@ export function ApplicationModal({
               />
             </div>
 
-            <div className={styles.inputGroup}>
-              <label htmlFor="email" className={styles.label}>
-                E-mail *
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                disabled={isSubmitting}
-                className={styles.input}
-                placeholder="seu.email@exemplo.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
+            <div className={styles.formRow}>
+              <div className={styles.inputGroup}>
+                <label htmlFor="email" className={styles.label}>
+                  E-mail *
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  disabled={isSubmitting}
+                  className={styles.input}
+                  placeholder="seu.email@exemplo.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
 
-            <div className={styles.inputGroup}>
-              <label htmlFor="phone" className={styles.label}>
-                WhatsApp / Telefone *
-              </label>
-              <input
-                id="phone"
-                type="tel"
-                required
-                disabled={isSubmitting}
-                className={styles.input}
-                placeholder="(11) 99999-9999"
-                value={phone}
-                onChange={handlePhoneChange}
-              />
+              <div className={styles.inputGroup}>
+                <label htmlFor="phone" className={styles.label}>
+                  WhatsApp / Telefone *
+                </label>
+                <input
+                  id="phone"
+                  type="tel"
+                  required
+                  autoComplete="tel-national"
+                  disabled={isSubmitting}
+                  className={styles.input}
+                  placeholder="(11) 99999-9999"
+                  value={phone}
+                  onChange={handlePhoneChange}
+                />
+              </div>
             </div>
 
             <div className={styles.inputGroup}>
@@ -255,6 +274,7 @@ export function ApplicationModal({
                 id="city"
                 type="text"
                 required
+                autoComplete="address-level2"
                 disabled={isSubmitting}
                 className={styles.input}
                 placeholder="Ex: Itatiba - SP"
@@ -267,17 +287,27 @@ export function ApplicationModal({
               <label htmlFor="resume" className={styles.label}>
                 Anexar Currículo (PDF) *
               </label>
-              <input
-                id="resume"
-                type="file"
-                accept=".pdf"
-                required
-                disabled={isSubmitting}
-                className={styles.fileInput}
-                onChange={handleFileChange}
-              />
-              <span className={styles.fileHint}>
-                Somente formato .PDF (tamanho máximo: 5MB)
+              <div
+                className={`${styles.fileBox} ${resumeFile ? styles.fileBoxSelected : ""}`}
+              >
+                <span className={styles.fileIcon}>
+                  <Icon name={resumeFile ? "check" : "fileText"} size={20} />
+                </span>
+                <input
+                  id="resume"
+                  type="file"
+                  accept=".pdf"
+                  required
+                  disabled={isSubmitting}
+                  className={styles.fileInput}
+                  onChange={handleFileChange}
+                  aria-describedby="resume-hint"
+                />
+              </div>
+              <span id="resume-hint" className={styles.fileHint}>
+                {resumeFile
+                  ? `${resumeFile.name} • ${formatFileSize(resumeFile.size)}`
+                  : "Somente formato .PDF (tamanho máximo: 5MB)"}
               </span>
             </div>
 
@@ -290,6 +320,12 @@ export function ApplicationModal({
                 ? "Enviando dados com segurança..."
                 : "Enviar Candidatura"}
             </button>
+
+            <p className={styles.privacyNote}>
+              <Icon name="lock" size={13} />
+              Seus dados são usados apenas para recrutamento e seleção, conforme
+              a LGPD.
+            </p>
           </form>
         )}
       </div>
