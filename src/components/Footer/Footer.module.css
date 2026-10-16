@@ -87,6 +87,18 @@
   font-size: 0.85rem;
 }
 
+.privacyText {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #94a3b8;
+}
+
+.bottomLinks {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
 .adminLink {
   display: inline-flex;
   align-items: center;

@@ -68,7 +68,7 @@ export function Footer() {
 
         <div>
           <h4 className={styles.colTitle}>Privacidade & LGPD</h4>
-          <p style={{ fontSize: "0.85rem", lineHeight: 1.5, color: "#94a3b8" }}>
+          <p className={styles.privacyText}>
             Seus dados cadastrais e currículos são tratados estritamente para
             finalidades de recrutamento e seleção interna, com armazenamento
             seguro em nuvem.
@@ -81,7 +81,7 @@ export function Footer() {
           © {new Date().getFullYear()} Grupo Carrantos. Todos os direitos
           reservados.
         </div>
-        <div style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
+        <div className={styles.bottomLinks}>
           <a href="/admin" className={styles.adminLink}>
             Área do RH <Icon name="lock" size={12} />
           </a>
